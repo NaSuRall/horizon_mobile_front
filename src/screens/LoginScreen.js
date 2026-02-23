@@ -2,6 +2,8 @@ import { useState, useContext } from "react";
 import { View, Text, TextInput, Button, StyleSheet, Image, TouchableOpacity } from "react-native";
 import api from "../api/axios";
 import { AuthContext } from "../context/AuthContext";
+import Toast from 'react-native-toast-message';
+
 
 export default function LoginScreen({ navigation }) {
   const { login } = useContext(AuthContext);
@@ -15,8 +17,20 @@ export default function LoginScreen({ navigation }) {
 
       login(res.data.token, res.data.user);
 
+          
+      Toast.show({
+        type: 'success',
+        text1: 'Connexion réussie',
+        text2: 'Bienvenue sur Horizon Moto !'
+      });
+
+    
     } catch (err) {
       console.log(err);
+      Toast.show({
+        type: 'error',
+        text1: 'Adresse mail ou mot de passe incorect',
+      });
     }
   };
 

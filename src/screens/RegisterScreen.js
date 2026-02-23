@@ -1,11 +1,10 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity } from "react-native";
 import api from "../api/axios";
-import { AuthContext } from "../context/AuthContext";
+import Toast from 'react-native-toast-message';
+
 
 export default function RegisterScreen({ navigation }) {
-  const { login } = useContext(AuthContext);
-
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -24,11 +23,19 @@ export default function RegisterScreen({ navigation }) {
 
       console.log("REPONSE API REGISTER :", res.data);
 
+      Toast.show({
+         type: 'success',
+         text1: 'Inscription réussie',
+       });
       // Sinon tu peux rediriger vers Login :
       navigation.navigate("Login");
 
     } catch (err) {
       console.log(err.response?.data || err.message);
+        Toast.show({
+         type: 'error',
+         text1: 'Une Erreur est arriver, veuillez ressayer ',
+       });
     }
   };
 
@@ -52,6 +59,7 @@ export default function RegisterScreen({ navigation }) {
             placeholder="ex: Jean"
             style={styles.input}
             value={firstName}
+            
             onChangeText={setFirstName}
           />
 
