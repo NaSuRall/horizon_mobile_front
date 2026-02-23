@@ -41,9 +41,6 @@ export default function HomeScreen() {
         </Text>
       </View>
 
-      <View style={styles.logout}>
-        <Button title="Se déconnecter" onPress={logout} />
-      </View>
 
       <Navbar />
 
@@ -103,9 +100,4 @@ const styles = StyleSheet.create({
     bottom: 5 
   },
 
-  logout: { 
-    position: "absolute", 
-    bottom: 50, 
-    width: "100%" 
-  }
 });

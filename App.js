@@ -8,6 +8,10 @@ import LoginScreen from "./src/screens/LoginScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
 import HomeScreen from "./src/screens/HomeScreen";
 import QrcodeScreen from "./src/screens/QrcodeScreen";
+import ProfileScreen from "./src/screens/ProfilScrenn";
+import CalendarScreen from "./src/screens/CalendarScreen";
+import GainScreen from "./src/screens/GainScreen";
+
 
 const Stack = createNativeStackNavigator();
 
@@ -24,6 +28,9 @@ function AppNavigation() {
         <>
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="QrCode" component={QrcodeScreen} />
+        <Stack.Screen name="Profil" component={ProfileScreen} />
+        <Stack.Screen name="Calendar" component={CalendarScreen} />
+        <Stack.Screen name="Gain" component={GainScreen} />
         </>
       ) : (
         // Utilisateur NON connecté

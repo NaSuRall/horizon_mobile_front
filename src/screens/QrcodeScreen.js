@@ -63,7 +63,7 @@ export default function QrcodeScreen(){
 }
 
 const styles = StyleSheet.create({
-    container:{flex:1, backgroundColor:"black", padding:20, paddingTop:50},
+    container:{flex:1, backgroundColor:"black", padding:20, paddingTop:50,},
     qrcode:{display:"flex", alignItems: "center", justifyContent:"center", width:"100%", padding:30},
     qrcodebg:{padding:20, backgroundColor:"white", borderRadius:10},
     header: { width: "100%", height: "10%", flexDirection: "row" },
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
         flexDirection: "row" 
     },
 
-    footer:{ backgroundColor:"white", height:"100%", width:"100%", borderRadius:10, padding:"10"},
+    footer:{ backgroundColor:"white", height:"40%", width:"100%", borderRadius:10, padding:"10"},
 
     footerHeader:{ height:40, borderBlockColor:"black", borderBottomWidth:2 , marginBottom:10},
     footerTitre:{ fontSize:20},
