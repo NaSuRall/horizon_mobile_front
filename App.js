@@ -7,6 +7,7 @@ import Toast from 'react-native-toast-message';
 import LoginScreen from "./src/screens/LoginScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
 import HomeScreen from "./src/screens/HomeScreen";
+import QrcodeScreen from "./src/screens/QrcodeScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -20,8 +21,10 @@ function AppNavigation() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {userToken ? (
-        // Utilisateur connecté
+        <>
         <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="QrCode" component={QrcodeScreen} />
+        </>
       ) : (
         // Utilisateur NON connecté
         <>
