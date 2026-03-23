@@ -1,91 +1,133 @@
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import QRCode from 'react-native-qrcode-svg';
-import { Motorbike } from "lucide-react-native";
-import Navbar from "../components/Navbar";
-import { View, Text, StyleSheet, Button, Image } from "react-native";
+import { View, Text, StyleSheet, Image, ActivityIndicator } from "react-native";
+import { useFonts, LexendDeca_400Regular, LexendDeca_700Bold } from '@expo-google-fonts/lexend-deca';
+import { useTheme } from "../context/ThemeContext";
 
+export default function QrcodeScreen() {
+    const { user } = useContext(AuthContext);
+    const theme = useTheme();
 
-export default function QrcodeScreen(){
-     const { user } = useContext(AuthContext);
+    const [fontsLoaded] = useFonts({ LexendDeca_400Regular, LexendDeca_700Bold });
 
-     const data = {
-        user_id: user.id,
-        point: user.point,
+    const qrContent = JSON.stringify({ user_id: user.id, point: user.point });
+    const readableCode = `HM-2024-${user.first_name.toUpperCase()}-${user.id}`;
+
+    const styles = makeStyles(theme);
+
+    if (!fontsLoaded) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={theme.primary} />
+            </View>
+        );
     }
-
-    const qrContent = JSON.stringify(data);
 
     return (
         <View style={styles.container}>
-        <Navbar />
-        <View style={styles.header}>
-            <Image 
-            source={require("../../assets/logo.png")}
-            style={styles.logo}
-            />
 
-            <View style={styles.points}>
-            <Text style={styles.textPoint}>{user.point}</Text>
-            <Motorbike color="white" />
+            {/* Header */}
+            <View style={styles.header}>
+                <Image source={require("../../assets/logo.png")} style={styles.logo} />
+                <Text style={styles.headerSpan}>Programme fidélité</Text>
             </View>
-        </View>
 
-            <View style={styles.qrcode}>
-                <View style={styles.qrcodebg}>
+            {/* Subtitle */}
+            <Text style={styles.subtitle}>
+                Présenter ce code en caisse{"\n"}pour cumuler vos points
+            </Text>
+
+            {/* QR Code */}
+            <View style={styles.qrWrapper}>
+                <View style={[styles.qrBox, { borderColor: theme.primary }]}>
                     <QRCode
-                    
                         value={qrContent}
                         size={220}
                         color="black"
                         backgroundColor="white"
-                    />  
-
+                    />
                 </View>
             </View>
 
-            <View style={styles.footer}>
-                <View style={styles.footerHeader}>
-                    <Text style={styles.footerTitre}>Vos informations : </Text>
-                </View>
+            {/* Readable code */}
+            <View style={styles.codeBox}>
+                <Text style={styles.codeText}>{readableCode}</Text>
+            </View>
 
-                <Text>Prénom : {user.first_name} </Text>
-                <Text>Nom :{user.last_name}</Text>
-                <Text>Email : {user.email}</Text>
-                <Text>Téléphone : {user.phone}</Text>
-                <Text>Points : {user.point}</Text>
+            {/* Info card */}
+            <View style={styles.infoCard}>
+                <View style={styles.infoDot} />
+                <Text style={styles.infoText}>
+                    Le caissier scannera ce code pour créditer vos points selon le montant de votre achat.
+                </Text>
             </View>
 
         </View>
-    )
-
-
+    );
 }
 
-const styles = StyleSheet.create({
-    container:{flex:1, backgroundColor:"black", padding:20, paddingTop:50,},
-    qrcode:{display:"flex", alignItems: "center", justifyContent:"center", width:"100%", padding:30},
-    qrcodebg:{padding:20, backgroundColor:"white", borderRadius:10},
-    header: { width: "100%", height: "10%", flexDirection: "row" },
+function makeStyles(theme) {
+    return StyleSheet.create({
+        loadingContainer: {
+            flex: 1, backgroundColor: "#111111",
+            justifyContent: "center", alignItems: "center",
+        },
+        container: {
+            flex: 1, backgroundColor: "#111111",
+            paddingTop: 50, paddingHorizontal: 16, gap: 20,
+        },
 
-    logo: { width: "50%", height: 40 },
-    textPoint: { color: "white", fontSize: 20 },
+        /* Header */
+        header: {
+            flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+        },
+        logo: { width: 140, height: 45, resizeMode: "contain" },
+        headerSpan: { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 13 },
 
-    points: { 
-        gap: 10, 
-        padding: 10, 
-        backgroundColor: "#FF383C", 
-        width: "45%", 
-        borderRadius: 10, 
-        height: "70%", 
-        justifyContent: "center", 
-        alignItems: "center", 
-        flexDirection: "row" 
-    },
+        /* Subtitle */
+        subtitle: {
+            color: "#888888", fontFamily: "LexendDeca_400Regular",
+            fontSize: 15, textAlign: "center", lineHeight: 22, marginTop: 8,
+        },
 
-    footer:{ backgroundColor:"white", height:"40%", width:"100%", borderRadius:10, padding:"10"},
+        /* QR Code */
+        qrWrapper: { alignItems: "center", justifyContent: "center" },
+        qrBox: {
+            backgroundColor: "white",
+            padding: 20, borderRadius: 16,
+            borderWidth: 3,             // ✅ bordure colorée autour du QR
+            borderColor: theme.primary, // ✅ thème
+        },
 
-    footerHeader:{ height:40, borderBlockColor:"black", borderBottomWidth:2 , marginBottom:10},
-    footerTitre:{ fontSize:20},
-    
-})
+        /* Readable code */
+        codeBox: {
+            backgroundColor: "#1A1A1A", borderWidth: 1,
+            borderColor: "#2A2A2A", borderRadius: 12,
+            paddingVertical: 14, alignItems: "center",
+        },
+        codeText: {
+            color: theme.primary,        // ✅ thème
+            fontFamily: "LexendDeca_400Regular",
+            fontSize: 16, letterSpacing: 1.5,
+        },
+
+        /* Info card */
+        infoCard: {
+            backgroundColor: "#1A1A1A", borderWidth: 1,
+            borderColor: "#2A2A2A", borderRadius: 14,
+            padding: 16, flexDirection: "row",
+            alignItems: "flex-start", gap: 12,
+        },
+        infoDot: {
+            width: 12, height: 12, borderRadius: 6,
+            backgroundColor: theme.primary, // ✅ thème
+            marginTop: 3,
+        },
+        infoText: {
+            flex: 1, color: "white",
+            fontFamily: "LexendDeca_400Regular",
+            fontSize: 14, lineHeight: 22,
+        },
+    });
+}
