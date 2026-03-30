@@ -32,14 +32,7 @@ export default function GainScreen() {
         );
     }
 
-    const transactions = user.transactions ?? [
-        { id: 1, label: "CASQUE INTEGRAL", date: "15 mars 2025", points: +150 },
-        { id: 2, label: "CASQUE INTEGRAL", date: "15 mars 2025", points: -650 },
-        { id: 3, label: "CASQUE INTEGRAL", date: "15 mars 2025", points: +150 },
-        { id: 4, label: "CASQUE INTEGRAL", date: "15 mars 2025", points: +150 },
-        { id: 5, label: "CASQUE INTEGRAL", date: "15 mars 2025", points: +150 },
-        { id: 6, label: "CASQUE INTEGRAL", date: "15 mars 2025", points: +150 },
-    ];
+    const transactions = user.transactions ?? [];
 
     return (
         <View style={styles.container}>

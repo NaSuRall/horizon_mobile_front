@@ -1,22 +1,123 @@
 import { useFonts, LexendDeca_400Regular, LexendDeca_700Bold } from '@expo-google-fonts/lexend-deca';
-import { View, Text, StyleSheet, Image, ActivityIndicator, TouchableOpacity, ScrollView } from "react-native";
-import { useContext } from "react";
+import { View, Text, StyleSheet, Image, ActivityIndicator, TouchableOpacity, ScrollView, Animated } from "react-native";
+import { useContext, useState, useRef, useEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../context/AuthContext";
 import { RefreshCw, QrCode, Info } from "lucide-react-native";
 import { useTheme, isLightColor } from "../context/ThemeContext";
 import RankModal from "../components/RankModal";
-import { useState } from "react";
+import Toast from "react-native-toast-message";
 
 export default function HomeScreen() {
   const theme = useTheme();
-  const { user } = useContext(AuthContext);
+  const { user, userToken, updatePoints, fetchWithAuth } = useContext(AuthContext);
   const navigation = useNavigation();
   const [rankModalVisible, setRankModalVisible] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Delta d'affichage : null = rien, number = variation (+150 ou -20)
+  const [pointDelta, setPointDelta] = useState(null);
+
+  // Animation : opacité + translation verticale du delta
+  const deltaOpacity = useRef(new Animated.Value(0)).current;
+  const deltaTranslateY = useRef(new Animated.Value(0)).current;
 
   const [fontsLoaded] = useFonts({ LexendDeca_400Regular, LexendDeca_700Bold });
 
   const styles = makeStyles(theme);
+
+  // Lance l'animation du delta puis la cache après 2.5s
+  const animateDelta = () => {
+    deltaOpacity.setValue(1);
+    deltaTranslateY.setValue(0);
+
+    Animated.parallel([
+      Animated.timing(deltaOpacity, {
+        toValue: 0,
+        duration: 2500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(deltaTranslateY, {
+        toValue: -30,
+        duration: 2500,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setPointDelta(null);
+    });
+  };
+
+  // Déclenche l'animation dès que pointDelta est défini
+  useEffect(() => {
+    if (pointDelta !== null) {
+      animateDelta();
+    }
+  }, [pointDelta]);
+
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+
+    try {
+      // fetchWithAuth gère le 401 → déconnexion automatique
+      const response = await fetchWithAuth("http://100.120.71.76:4000/api/user/points");
+
+      // Si null → token expiré, déconnexion déjà gérée dans fetchWithAuth
+      if (!response) return;
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        Toast.show({
+          type: "error",
+          text1: "Erreur",
+          text2: data.error ?? "Une erreur est survenue",
+        });
+        return;
+      }
+
+      const newPoints = data.points;
+      const oldPoints = user.point ?? 0;
+      const delta = newPoints - oldPoints;
+
+      await updatePoints(newPoints);
+
+      if (delta > 0) {
+        // Points gagnés
+        Toast.show({
+          type: "success",
+          text1: "Points mis à jour",
+          text2: `+${delta} points ajoutés sur ton compte !`,
+        });
+        setPointDelta(delta);
+      } else if (delta < 0) {
+        // Points perdus
+        Toast.show({
+          type: "error",
+          text1: "Points mis à jour",
+          text2: `${delta} points retirés de ton compte`,
+        });
+        setPointDelta(delta);
+      } else {
+        // Aucun changement
+        Toast.show({
+          type: "info",
+          text1: "Aucun changement",
+          text2: "Ton solde de points est déjà à jour",
+        });
+      }
+
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Erreur réseau",
+        text2: "Impossible de contacter le serveur",
+      });
+      console.error("Erreur :", error.message);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   if (!fontsLoaded) {
     return (
@@ -25,9 +126,9 @@ export default function HomeScreen() {
         </View>
     );
   }
+
   const isLight = isLightColor(theme.primary);
   const qrTextColor = isLight ? "#111111" : "white";
-
   const rewards = [];
 
   return (
@@ -44,12 +145,40 @@ export default function HomeScreen() {
 
           {/* Points Card */}
           <View style={styles.card}>
-            <TouchableOpacity style={styles.rechargeBtn}>
+
+            {/* Bouton recharger */}
+            <TouchableOpacity
+                style={styles.rechargeBtn}
+                onPress={handleRefresh}
+                disabled={isRefreshing}
+            >
               <RefreshCw size={14} color="#888888" />
-              <Text style={styles.rechargeText}>recharger</Text>
+              <Text style={styles.rechargeText}>
+                {isRefreshing ? "chargement..." : "recharger"}
+              </Text>
             </TouchableOpacity>
 
-            <Text style={styles.userPoint}>{user.point}</Text>
+            {/* Points + delta animé */}
+            <View style={styles.pointsRow}>
+              <Text style={styles.userPoint}>{user.point}</Text>
+
+              {/* Delta flottant animé */}
+              {pointDelta !== null && (
+                  <Animated.Text
+                      style={[
+                        styles.pointDelta,
+                        pointDelta > 0 ? styles.deltaPositive : styles.deltaNegative,
+                        {
+                          opacity: deltaOpacity,
+                          transform: [{ translateY: deltaTranslateY }],
+                        },
+                      ]}
+                  >
+                    {pointDelta > 0 ? `+${pointDelta}` : `${pointDelta}`}
+                  </Animated.Text>
+              )}
+            </View>
+
             <Text style={styles.pointsLabel}>points cumulés</Text>
 
             {/* Level badge */}
@@ -147,23 +276,44 @@ function makeStyles(theme) {
     },
     rechargeText: { color: "#888888", fontSize: 13, fontFamily: "LexendDeca_400Regular" },
 
+    /* Points row : chiffre + delta côte à côte */
+    pointsRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 8,
+    },
     userPoint: {
       fontSize: 62,
-      color: theme.primary,           // ✅ thème
+      color: theme.primary,
       fontFamily: "LexendDeca_700Bold",
       lineHeight: 68,
     },
+
+    /* Delta animé */
+    pointDelta: {
+      fontSize: 20,
+      fontFamily: "LexendDeca_700Bold",
+      marginTop: 10,
+      alignSelf: "center",
+    },
+    deltaPositive: {
+      color: "#4CAF50",
+    },
+    deltaNegative: {
+      color: "#E3000F",
+    },
+
     pointsLabel: { color: "#888888", fontSize: 13, fontFamily: "LexendDeca_400Regular" },
 
     /* Level */
     levelRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 },
     levelBadge: {
       borderWidth: 1,
-      borderColor: theme.primary,     // ✅ thème
+      borderColor: theme.primary,
       borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4,
     },
     levelText: {
-      color: theme.primary,           // ✅ thème
+      color: theme.primary,
       fontSize: 13, fontFamily: "LexendDeca_400Regular",
     },
     infoBtn: {
@@ -179,14 +329,14 @@ function makeStyles(theme) {
     },
     progressFill: {
       height: "100%",
-      backgroundColor: theme.primary, // ✅ thème
+      backgroundColor: theme.primary,
       borderRadius: 10,
     },
     progressLabel: { color: "#888888", fontSize: 12, fontFamily: "LexendDeca_400Regular" },
 
     /* QR Button */
     qrButton: {
-      backgroundColor: theme.primary, // ✅ suit le thème maintenant
+      backgroundColor: theme.primary,
       borderRadius: 14, paddingVertical: 18,
       flexDirection: "row", alignItems: "center",
       justifyContent: "center", gap: 10,
@@ -203,15 +353,15 @@ function makeStyles(theme) {
     },
     rewardDot: {
       width: 10, height: 10, borderRadius: 5,
-      backgroundColor: theme.primary, // ✅ thème
+      backgroundColor: theme.primary,
     },
     rewardText: { flex: 1, color: "white", fontSize: 14, fontFamily: "LexendDeca_400Regular" },
     activeBadge: {
-      backgroundColor: theme.secondary, // ✅ thème
+      backgroundColor: theme.secondary,
       borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4,
     },
     activeText: {
-      color: theme.primary,            // ✅ thème
+      color: theme.primary,
       fontSize: 12, fontFamily: "LexendDeca_400Regular",
     },
     emptyRewards: {

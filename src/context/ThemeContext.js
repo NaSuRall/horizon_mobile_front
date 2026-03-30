@@ -26,7 +26,7 @@ export function ThemeProvider({ children }) {
     const { user } = useContext(AuthContext);
 
     // ✅ Sécurisé : si user est null ou rank inconnu, on prend Silver par défaut
-    const rank  = user?.rank ?? "Gold";
+    const rank  = user?.rank ?? "Bronze";
     const theme = RANK_THEMES[rank] ?? DEFAULT_THEME;
 
     return (

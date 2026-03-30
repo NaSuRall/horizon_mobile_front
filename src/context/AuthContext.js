@@ -45,6 +45,36 @@ export function AuthProvider({ children }) {
     await AsyncStorage.removeItem("user");
   };
 
+  // AuthContext.js — ajoute cette fonction
+  const updatePoints = async (newPoints) => {
+    const updatedUser = { ...user, point: newPoints };
+    setUser(updatedUser);
+    // Met aussi à jour AsyncStorage pour persister
+    await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
+  };
+
+
+  const fetchWithAuth = async (url, options = {}) => {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${userToken}`,
+        ...options.headers,
+      },
+    });
+
+    // Token expiré ou invalide → déconnexion automatique
+    if (response.status === 401) {
+      await logout(); // vide AsyncStorage + remet userToken à null
+      // La navigation vers Login se fait automatiquement
+      // via ton NavigationContainer qui surveille userToken
+      return null;
+    }
+
+    return response;
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -53,6 +83,8 @@ export function AuthProvider({ children }) {
         login,
         logout,
         loading,
+        updatePoints,
+        fetchWithAuth,
       }}
     >
       {children}
