@@ -46,10 +46,9 @@ export function AuthProvider({ children }) {
   };
 
   // AuthContext.js — ajoute cette fonction
-  const updatePoints = async (newPoints) => {
-    const updatedUser = { ...user, point: newPoints };
+  const updatePoints = async (newPoints, newRank) => {
+    const updatedUser = { ...user, point: newPoints, ...(newRank ? { rank: newRank } : {}) };
     setUser(updatedUser);
-    // Met aussi à jour AsyncStorage pour persister
     await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
   };
 

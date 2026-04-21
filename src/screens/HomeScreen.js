@@ -60,7 +60,7 @@ export default function HomeScreen() {
 
     try {
       // fetchWithAuth gère le 401 → déconnexion automatique
-      const response = await fetchWithAuth("http://100.120.71.76:4000/api/user/points");
+      const response = await fetchWithAuth(`${process.env.EXPO_PUBLIC_API_URL}/user/points`);
 
       // Si null → token expiré, déconnexion déjà gérée dans fetchWithAuth
       if (!response) return;
@@ -77,10 +77,11 @@ export default function HomeScreen() {
       }
 
       const newPoints = data.points;
+      const newRank   = data.rank;
       const oldPoints = user.point ?? 0;
       const delta = newPoints - oldPoints;
 
-      await updatePoints(newPoints);
+      await updatePoints(newPoints, newRank);
 
       if (delta > 0) {
         // Points gagnés
@@ -130,6 +131,17 @@ export default function HomeScreen() {
   const isLight = isLightColor(theme.primary);
   const qrTextColor = isLight ? "#111111" : "white";
   const rewards = [];
+
+  const RANK_THRESHOLDS = { Bronze: 0, Silver: 500, Gold: 1000, Platine: 2500, Diamond: 5000 };
+  const RANK_ORDER = ["Bronze", "Silver", "Gold", "Platine", "Diamond"];
+  const currentRankName = user.rank ?? "Bronze";
+  const currentIdx = RANK_ORDER.indexOf(currentRankName);
+  const isMaxRank = currentIdx === RANK_ORDER.length - 1;
+  const nextRankName = isMaxRank ? null : RANK_ORDER[currentIdx + 1];
+  const currentFloor = RANK_THRESHOLDS[currentRankName] ?? 0;
+  const nextFloor = isMaxRank ? null : RANK_THRESHOLDS[nextRankName];
+  const pointsToNext = isMaxRank ? 0 : nextFloor - (user.point ?? 0);
+  const progress = isMaxRank ? 1 : Math.min(((user.point ?? 0) - currentFloor) / (nextFloor - currentFloor), 1);
 
   return (
       <View style={styles.container}>
@@ -201,9 +213,13 @@ export default function HomeScreen() {
 
             {/* Progress bar */}
             <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: "80%" }]} />
+              <View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` }]} />
             </View>
-            <Text style={styles.progressLabel}>250 points pour atteindre Gold</Text>
+            <Text style={styles.progressLabel}>
+              {isMaxRank
+                ? "Rang maximum atteint 🏆"
+                : `${pointsToNext} points pour atteindre ${nextRankName}`}
+            </Text>
           </View>
 
           {/* QR Code Button */}

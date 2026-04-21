@@ -4,6 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 import { LogOut, User, Mail, Lock, Star } from "lucide-react-native";
 import { useFonts, LexendDeca_400Regular, LexendDeca_700Bold } from '@expo-google-fonts/lexend-deca';
 import { useTheme, isLightColor } from "../context/ThemeContext";
+import Toast from "react-native-toast-message";
 
 export default function ProfileScreen() {
   const { user, logout } = useContext(AuthContext);
@@ -26,8 +27,11 @@ export default function ProfileScreen() {
   }
 
   const handleSave = () => {
-    console.log("Nouveau mail :", email);
-    console.log("Nouveau mot de passe :", password);
+    Toast.show({
+      type: "info",
+      text1: "Bientôt disponible",
+      text2: "La modification du profil arrive prochainement",
+    });
   };
 
   return (
