@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import {
     View, Text, StyleSheet, Image, ScrollView,
@@ -7,32 +7,51 @@ import {
 import { useFonts, LexendDeca_400Regular, LexendDeca_700Bold } from '@expo-google-fonts/lexend-deca';
 import { ChevronLeft, ChevronRight } from "lucide-react-native";
 import { useTheme, isLightColor } from "../context/ThemeContext";
+import Toast from "react-native-toast-message";
 
 const MONTHS = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Aoû","Sep","Oct","Nov","Déc"];
-const DAYS = ["Su","Mo","Tu","We","Th","Fr","Sa"];
-const YEARS = Array.from({ length: 10 }, (_, i) => 2023 + i);
+const DAYS   = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+const YEARS  = Array.from({ length: 10 }, (_, i) => 2023 + i);
 
-const EVENTS = [
-    { id: 1, day: 5,  title: "Journée portes ouvertes", location: "Magasin Horizon Moto - 10h à 18h", badge: "3x points",     badgeType: "red"   },
-    { id: 2, day: 12, title: "Balade printanière",       location: "Départ parking - 8h00",           badge: "Accès gratuit", badgeType: "green" },
-    { id: 3, day: 12, title: "Balade printanière",       location: "Départ parking - 8h00",           badge: "Accès gratuit", badgeType: "green" },
-    { id: 4, day: 12, title: "Balade printanière",       location: "Départ parking - 8h00",           badge: "Accès gratuit", badgeType: "green" },
-];
-
-function getDaysInMonth(year, month) { return new Date(year, month + 1, 0).getDate(); }
+function getDaysInMonth(year, month)  { return new Date(year, month + 1, 0).getDate(); }
 function getFirstDayOfMonth(year, month) { return new Date(year, month, 1).getDay(); }
 
 export default function CalendarScreen() {
+    const { fetchWithAuth } = useContext(AuthContext);
     const today = new Date();
-    const [month, setMonth]     = useState(today.getMonth());
-    const [year, setYear]       = useState(today.getFullYear());
+    const [month,    setMonth]    = useState(today.getMonth());
+    const [year,     setYear]     = useState(today.getFullYear());
     const [selected, setSelected] = useState(today.getDate());
+    const [events,   setEvents]   = useState([]);
+    const [loading,  setLoading]  = useState(true);
 
     const theme   = useTheme();
     const isLight = isLightColor(theme.primary);
     const styles  = makeStyles(theme, isLight);
 
     const [fontsLoaded] = useFonts({ LexendDeca_400Regular, LexendDeca_700Bold });
+
+    useEffect(() => {
+        const fetchEvents = async () => {
+            setLoading(true);
+            try {
+                const response = await fetchWithAuth(`${process.env.EXPO_PUBLIC_API_URL}/events`);
+                if (!response) return;
+
+                const data = await response.json();
+                if (!response.ok) {
+                    Toast.show({ type: "error", text1: "Erreur", text2: data.error ?? "Impossible de charger les événements" });
+                    return;
+                }
+                setEvents(data.events ?? []);
+            } catch (_) {
+                Toast.show({ type: "error", text1: "Erreur réseau", text2: "Impossible de contacter le serveur" });
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchEvents();
+    }, []);
 
     if (!fontsLoaded) {
         return (
@@ -48,7 +67,9 @@ export default function CalendarScreen() {
         Array.from({ length: daysInMonth }, (_, i) => i + 1)
     );
 
-    const eventDays = new Set(EVENTS.map(e => e.day));
+    // Événements du mois/année actuellement affichés
+    const monthEvents = events.filter(e => e.month === month + 1 && e.year === year);
+    const eventDays   = new Set(monthEvents.map(e => e.day));
 
     const prevMonth = () => {
         if (month === 0) { setMonth(11); setYear(y => y - 1); }
@@ -61,9 +82,10 @@ export default function CalendarScreen() {
         setSelected(null);
     };
 
-    const filteredEvents = selected ? EVENTS.filter(e => e.day === selected) : EVENTS;
+    const filteredEvents = selected
+        ? monthEvents.filter(e => e.day === selected)
+        : monthEvents;
 
-    // Couleur icône nav btn selon luminosité du thème
     const navIconColor = isLight ? "#111111" : "white";
 
     return (
@@ -177,7 +199,11 @@ export default function CalendarScreen() {
                     {selected ? `ÉVÉNEMENTS LE ${selected}` : "EVENEMENT CE MOIS"}
                 </Text>
 
-                {filteredEvents.length === 0 ? (
+                {loading ? (
+                    <View style={styles.emptyBox}>
+                        <ActivityIndicator size="large" color={theme.primary} />
+                    </View>
+                ) : filteredEvents.length === 0 ? (
                     <View style={styles.emptyBox}>
                         <Text style={styles.emptyText}>Aucun événement ce jour</Text>
                     </View>
@@ -249,21 +275,21 @@ function makeStyles(theme, isLight) {
 
         titleBlock: { gap: 2 },
         titleSub:  { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 12, letterSpacing: 1 },
-        titleMain: { color: theme.primary, fontFamily: "LexendDeca_700Bold", fontSize: 30, letterSpacing: 0.5 }, // ✅ thème
+        titleMain: { color: theme.primary, fontFamily: "LexendDeca_700Bold", fontSize: 30, letterSpacing: 0.5 },
 
         calendarCard: { backgroundColor: "#F5F5F5", borderRadius: 20, padding: 16, gap: 12 },
 
         calNavRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-        navBtn: { padding: 4, backgroundColor: theme.primary, borderRadius: 8 }, // ✅ thème
+        navBtn: { padding: 4, backgroundColor: theme.primary, borderRadius: 8 },
         pickerBox: { flex: 1 },
         pickerItem: {
             flexDirection: "row", alignItems: "center", gap: 2,
             paddingHorizontal: 8, paddingVertical: 5,
             backgroundColor: "#E0E0E0", borderRadius: 8,
         },
-        pickerItemActive: { backgroundColor: theme.primary }, // ✅ thème
+        pickerItemActive: { backgroundColor: theme.primary },
         pickerText:       { color: "#444", fontFamily: "LexendDeca_400Regular", fontSize: 13 },
-        pickerTextActive: { color: isLight ? "#111111" : "white" }, // ✅ adaptatif
+        pickerTextActive: { color: isLight ? "#111111" : "white" },
 
         daysHeader: { flexDirection: "row", justifyContent: "space-around" },
         dayLabel:   { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 12, width: 36, textAlign: "center" },
@@ -274,7 +300,7 @@ function makeStyles(theme, isLight) {
         dayCircleToday: { backgroundColor: "#2A2A2A" },
         dayText:        { color: "#1A1A1A", fontFamily: "LexendDeca_400Regular", fontSize: 13 },
         dayTextToday:   { color: "white" },
-        eventDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: theme.primary, marginTop: 2 }, // ✅ thème
+        eventDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: theme.primary, marginTop: 2 },
 
         sectionTitle: { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 12, letterSpacing: 1 },
 

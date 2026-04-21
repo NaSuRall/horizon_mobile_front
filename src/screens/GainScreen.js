@@ -1,9 +1,11 @@
-import { useContext } from "react";
+import { useContext, useState, useCallback } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator } from "react-native";
 import { useFonts, LexendDeca_400Regular, LexendDeca_700Bold } from '@expo-google-fonts/lexend-deca';
+import { useFocusEffect } from "@react-navigation/native";
 import { Bookmark, X, Wrench, Camera, Square, Binoculars } from "lucide-react-native";
 import { useTheme } from "../context/ThemeContext";
+import Toast from "react-native-toast-message";
 
 const ICONS = [Bookmark, X, Wrench, Camera, Square, Binoculars];
 
@@ -17,12 +19,45 @@ function TransactionIcon({ index, theme }) {
 }
 
 export default function GainScreen() {
-    const { user } = useContext(AuthContext);
+    const { fetchWithAuth } = useContext(AuthContext);
     const theme = useTheme();
 
     const [fontsLoaded] = useFonts({ LexendDeca_400Regular, LexendDeca_700Bold });
+    const [transactions, setTransactions] = useState([]);
+    const [loading,      setLoading]      = useState(true);
 
     const styles = makeStyles(theme);
+
+    useFocusEffect(
+        useCallback(() => {
+            let active = true;
+            const fetchTransactions = async () => {
+                setLoading(true);
+                try {
+                    const response = await fetchWithAuth(
+                        `${process.env.EXPO_PUBLIC_API_URL}/user/transactions`
+                    );
+                    if (!response) return;
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        Toast.show({ type: "error", text1: "Erreur", text2: data.error ?? "Impossible de charger les transactions" });
+                        return;
+                    }
+
+                    if (active) setTransactions(data.transactions ?? []);
+                } catch (_) {
+                    Toast.show({ type: "error", text1: "Erreur réseau", text2: "Impossible de contacter le serveur" });
+                } finally {
+                    if (active) setLoading(false);
+                }
+            };
+
+            fetchTransactions();
+            return () => { active = false; };
+        }, [])
+    );
 
     if (!fontsLoaded) {
         return (
@@ -31,8 +66,6 @@ export default function GainScreen() {
             </View>
         );
     }
-
-    const transactions = user.transactions ?? [];
 
     return (
         <View style={styles.container}>
@@ -52,7 +85,11 @@ export default function GainScreen() {
 
             {/* List */}
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-                {transactions.length === 0 ? (
+                {loading ? (
+                    <View style={styles.emptyBox}>
+                        <ActivityIndicator size="large" color={theme.primary} />
+                    </View>
+                ) : transactions.length === 0 ? (
                     <View style={styles.emptyBox}>
                         <Text style={styles.emptyText}>Aucune transaction pour le moment</Text>
                     </View>
@@ -99,7 +136,7 @@ function makeStyles(theme) {
         titleBlock: { gap: 2, marginBottom: 16 },
         titleSub: { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 13, letterSpacing: 1 },
         titleMain: {
-            color: theme.primary, // ✅ thème
+            color: theme.primary,
             fontFamily: "LexendDeca_700Bold", fontSize: 32, letterSpacing: 1,
         },
         transactionCount: { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 13, marginTop: 4 },
