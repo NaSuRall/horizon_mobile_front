@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, ActivityIndicator, TouchableOpacity, Scr
 import { useContext, useState, useRef, useEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../context/AuthContext";
-import { RefreshCw, QrCode, Info } from "lucide-react-native";
+import { RefreshCw, QrCode, Info, ShoppingBag } from "lucide-react-native";
 import { useTheme, isLightColor } from "../context/ThemeContext";
 import RankModal from "../components/RankModal";
 import Toast from "react-native-toast-message";
@@ -130,7 +130,6 @@ export default function HomeScreen() {
 
   const isLight = isLightColor(theme.primary);
   const qrTextColor = isLight ? "#111111" : "white";
-  const rewards = [];
 
   const RANK_THRESHOLDS = { Bronze: 0, Silver: 500, Gold: 1000, Platine: 2500, Diamond: 5000 };
   const RANK_ORDER = ["Bronze", "Silver", "Gold", "Platine", "Diamond"];
@@ -228,27 +227,17 @@ export default function HomeScreen() {
             <Text style={[styles.qrButtonText, { color: qrTextColor }]}>Afficher mon Qr Code</Text>
           </TouchableOpacity>
 
-          {/* Rewards Section */}
-          <Text style={styles.sectionTitle}>Récompenses Disponible</Text>
-          {rewards.length === 0 ? (
-              <View style={styles.emptyRewards}>
-                <Text style={styles.emptyRewardsText}>Pas de récompenses disponibles pour le moment</Text>
-              </View>
-          ) : (
-              <View style={styles.rewardsList}>
-                {rewards.map((reward, index) => (
-                    <View key={index} style={styles.rewardItem}>
-                      <View style={styles.rewardDot} />
-                      <Text style={styles.rewardText}>{reward.label}</Text>
-                      {reward.active && (
-                          <View style={styles.activeBadge}>
-                            <Text style={styles.activeText}>Actif</Text>
-                          </View>
-                      )}
-                    </View>
-                ))}
-              </View>
-          )}
+          {/* Boutique */}
+          <Text style={styles.sectionTitle}>Boutique récompenses</Text>
+          <TouchableOpacity
+              style={styles.shopButton}
+              onPress={() => navigation.navigate("Shop")}
+          >
+            <ShoppingBag size={22} color={qrTextColor} />
+            <Text style={[styles.shopButtonText, { color: qrTextColor }]}>
+              Voir les récompenses
+            </Text>
+          </TouchableOpacity>
         </ScrollView>
       </View>
   );
@@ -380,11 +369,13 @@ function makeStyles(theme) {
       color: theme.primary,
       fontSize: 12, fontFamily: "LexendDeca_400Regular",
     },
-    emptyRewards: {
-      backgroundColor: "#1A1A1A", borderWidth: 1, borderColor: "#2A2A2A",
-      borderRadius: 14, paddingVertical: 24,
-      alignItems: "center", justifyContent: "center",
+    shopButton: {
+      backgroundColor: "#1A1A1A",
+      borderWidth: 1, borderColor: theme.primary,
+      borderRadius: 14, paddingVertical: 18,
+      flexDirection: "row", alignItems: "center",
+      justifyContent: "center", gap: 10,
     },
-    emptyRewardsText: { color: "#888888", fontSize: 14, fontFamily: "LexendDeca_400Regular" },
+    shopButtonText: { fontSize: 17, fontFamily: "LexendDeca_700Bold" },
   });
 }

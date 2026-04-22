@@ -18,11 +18,7 @@ function AppNavigation() {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             {userToken ? (
-                <Stack.Screen
-                    name="Main"
-                    // ✅ component prop au lieu d'une fonction inline
-                    component={MainWithTheme}
-                />
+                <Stack.Screen name="Main" component={MainWithTheme} />
             ) : (
                 <>
                     <Stack.Screen name="Login" component={LoginScreen} />
@@ -33,7 +29,6 @@ function AppNavigation() {
     );
 }
 
-// ✅ Composant déclaré en dehors pour éviter le re-render et l'erreur "object"
 function MainWithTheme() {
     return (
         <ThemeProvider>
