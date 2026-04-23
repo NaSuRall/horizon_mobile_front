@@ -2,6 +2,7 @@
   "expo": {
     "name": "Horizon Moto",
     "slug": "horizon_front",
+    "scheme": "horizonmoto",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
@@ -26,7 +27,8 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-web-browser"
     ]
   }
 }

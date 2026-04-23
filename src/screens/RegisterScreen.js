@@ -1,14 +1,22 @@
-import { useState } from "react";
+import { useState, useContext, useEffect } from "react";
 import {
   View, Text, TextInput, StyleSheet, Image, TouchableOpacity,
   ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform
 } from "react-native";
+import * as Google from "expo-auth-session/providers/google";
+import * as WebBrowser from "expo-web-browser";
 import api from "../api/axios";
+import { AuthContext } from "../context/AuthContext";
 import Toast from 'react-native-toast-message';
 import { useFonts, LexendDeca_400Regular, LexendDeca_700Bold } from '@expo-google-fonts/lexend-deca';
 import { Mail, Lock, User, Phone, AtSign, ChevronRight, ChevronLeft } from "lucide-react-native";
+import { AntDesign } from "@expo/vector-icons";
+
+WebBrowser.maybeCompleteAuthSession();
 
 const PRIMARY = "#E3000F";
+const GOOGLE_WEB_CLIENT_ID     = "589886121106-gq7ir45hi1gcmjl6lgk5ce8e6u5sc5t0.apps.googleusercontent.com";
+const GOOGLE_ANDROID_CLIENT_ID = "589886121106-6ndeismkr8c1t3jgjheuns71i0nfpnop.apps.googleusercontent.com";
 
 const STEPS = [
   { id: 1, title: "Votre email",     subtitle: "On commence par votre adresse mail" },
@@ -19,8 +27,43 @@ const STEPS = [
 ];
 
 export default function RegisterScreen({ navigation }) {
+  const { login } = useContext(AuthContext);
   const [step, setStep]     = useState(1);
   const [loading, setLoading] = useState(false);
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    webClientId:     GOOGLE_WEB_CLIENT_ID,
+    androidClientId: GOOGLE_ANDROID_CLIENT_ID || undefined,
+    scopes: ["profile", "email"],
+  });
+
+  useEffect(() => {
+    if (response?.type === "success") {
+      handleGoogleResponse(response.authentication);
+    }
+  }, [response]);
+
+  const handleGoogleResponse = async (authentication) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ access_token: authentication.accessToken }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        login(data.token, data.user);
+        Toast.show({ type: "success", text1: "Compte créé avec Google !", text2: `Bienvenue ${data.user.first_name} !` });
+      } else {
+        Toast.show({ type: "error", text1: "Erreur Google", text2: data.error ?? "Une erreur est survenue" });
+      }
+    } catch {
+      Toast.show({ type: "error", text1: "Erreur réseau" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [form, setForm] = useState({
     email:      "",
@@ -127,7 +170,7 @@ export default function RegisterScreen({ navigation }) {
   return (
       <KeyboardAvoidingView
           style={styles.keyboardView}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior="padding"
       >
         <ScrollView
             contentContainerStyle={styles.scrollContent}
@@ -289,12 +332,31 @@ export default function RegisterScreen({ navigation }) {
             )}
 
             {step === 1 && (
-                <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-                  <Text style={styles.link}>
-                    Déjà un compte ?{" "}
-                    <Text style={styles.linkAccent}>Se connecter</Text>
-                  </Text>
-                </TouchableOpacity>
+                <>
+                  {/* Séparateur */}
+                  <View style={styles.separator}>
+                    <View style={styles.separatorLine} />
+                    <Text style={styles.separatorText}>ou</Text>
+                    <View style={styles.separatorLine} />
+                  </View>
+
+                  {/* Google */}
+                  <TouchableOpacity
+                      style={[styles.googleBtn, (!request || loading) && { opacity: 0.6 }]}
+                      onPress={() => promptAsync()}
+                      disabled={!request || loading}
+                  >
+                    <AntDesign name="google" size={20} color="#EA4335" />
+                    <Text style={styles.googleBtnText}>S'inscrire avec Google</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+                    <Text style={styles.link}>
+                      Déjà un compte ?{" "}
+                      <Text style={styles.linkAccent}>Se connecter</Text>
+                    </Text>
+                  </TouchableOpacity>
+                </>
             )}
           </View>
 
@@ -361,4 +423,15 @@ const styles = StyleSheet.create({
 
   link: { color: "#888888", fontSize: 14, fontFamily: "LexendDeca_400Regular", textAlign: "center" },
   linkAccent: { color: PRIMARY, fontFamily: "LexendDeca_700Bold" },
+
+  separator: { flexDirection: "row", alignItems: "center", gap: 10, width: "100%" },
+  separatorLine: { flex: 1, height: 1, backgroundColor: "#2A2A2A" },
+  separatorText: { color: "#555", fontFamily: "LexendDeca_400Regular", fontSize: 13 },
+
+  googleBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    backgroundColor: "#1A1A1A", borderWidth: 1, borderColor: "#2A2A2A",
+    borderRadius: 14, paddingVertical: 14, width: "100%", gap: 10,
+  },
+  googleBtnText: { color: "white", fontSize: 15, fontFamily: "LexendDeca_700Bold" },
 });
