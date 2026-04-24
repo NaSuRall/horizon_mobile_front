@@ -8,6 +8,7 @@ import Toast from 'react-native-toast-message';
 import { useFonts, LexendDeca_400Regular, LexendDeca_700Bold } from '@expo-google-fonts/lexend-deca';
 import { Mail, Lock } from "lucide-react-native";
 import { AntDesign } from "@expo/vector-icons";
+import { useTheme } from "../context/ThemeContext";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -17,6 +18,8 @@ const GOOGLE_ANDROID_CLIENT_ID = "589886121106-6ndeismkr8c1t3jgjheuns71i0nfpnop.
 
 export default function LoginScreen({ navigation }) {
   const { login } = useContext(AuthContext);
+  const theme     = useTheme();
+
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading]   = useState(false);
@@ -30,9 +33,7 @@ export default function LoginScreen({ navigation }) {
   });
 
   useEffect(() => {
-    if (response?.type === "success") {
-      handleGoogleResponse(response.authentication);
-    }
+    if (response?.type === "success") handleGoogleResponse(response.authentication);
   }, [response]);
 
   const handleGoogleResponse = async (authentication) => {
@@ -59,9 +60,9 @@ export default function LoginScreen({ navigation }) {
 
   if (!fontsLoaded) {
     return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={PRIMARY} />
-        </View>
+      <View style={{ flex: 1, backgroundColor: theme.bg, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color={PRIMARY} />
+      </View>
     );
   }
 
@@ -78,144 +79,136 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
+  const styles = makeStyles(theme);
+
   return (
-      <KeyboardAvoidingView
-          style={styles.keyboardView}
-          behavior="padding"
+    <KeyboardAvoidingView style={styles.keyboardView} behavior="padding">
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bounces={false}
       >
-        <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            bounces={false}
-        >
+        {/* Logo */}
+        <View style={styles.logoBlock}>
+          <Image source={require("../../assets/logo.png")} style={styles.logo} />
+        </View>
 
-          {/* Logo */}
-          <View style={styles.logoBlock}>
-            <Image source={require("../../assets/logo.png")} style={styles.logo} />
+        {/* Title */}
+        <View style={styles.titleBlock}>
+          <Text style={styles.titleMain}>Se connecter</Text>
+          <Text style={styles.titleSub}>Accédez à votre programme fidélité</Text>
+        </View>
+
+        {/* Form */}
+        <View style={styles.form}>
+          <View style={styles.inputWrapper}>
+            <Mail size={18} color={theme.textMuted} />
+            <TextInput
+              style={styles.input}
+              placeholder="Adresse email"
+              placeholderTextColor={theme.placeholder}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
+          <View style={styles.inputWrapper}>
+            <Lock size={18} color={theme.textMuted} />
+            <TextInput
+              style={styles.input}
+              placeholder="Mot de passe"
+              placeholderTextColor={theme.placeholder}
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
+          </View>
+        </View>
+
+        {/* Buttons */}
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={[styles.button, loading && { opacity: 0.7 }]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading
+              ? <ActivityIndicator color="white" />
+              : <Text style={styles.buttonText}>Se connecter</Text>
+            }
+          </TouchableOpacity>
+
+          <View style={styles.separator}>
+            <View style={styles.separatorLine} />
+            <Text style={styles.separatorText}>ou</Text>
+            <View style={styles.separatorLine} />
           </View>
 
-          {/* Title */}
-          <View style={styles.titleBlock}>
-            <Text style={styles.titleMain}>Se connecter</Text>
-            <Text style={styles.titleSub}>Accédez à votre programme fidélité</Text>
-          </View>
+          <TouchableOpacity
+            style={[styles.googleBtn, (!request || loading) && { opacity: 0.6 }]}
+            onPress={() => promptAsync()}
+            disabled={!request || loading}
+          >
+            <AntDesign name="google" size={20} color="#EA4335" />
+            <Text style={styles.googleBtnText}>Continuer avec Google</Text>
+          </TouchableOpacity>
 
-          {/* Form */}
-          <View style={styles.form}>
-            <View style={styles.inputWrapper}>
-              <Mail size={18} color="#888888" />
-              <TextInput
-                  style={styles.input}
-                  placeholder="Adresse email"
-                  placeholderTextColor="#555"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-              />
-            </View>
-
-            <View style={styles.inputWrapper}>
-              <Lock size={18} color="#888888" />
-              <TextInput
-                  style={styles.input}
-                  placeholder="Mot de passe"
-                  placeholderTextColor="#555"
-                  secureTextEntry
-                  value={password}
-                  onChangeText={setPassword}
-              />
-            </View>
-          </View>
-
-          {/* Buttons */}
-          <View style={styles.footer}>
-            <TouchableOpacity
-                style={[styles.button, loading && { opacity: 0.7 }]}
-                onPress={handleLogin}
-                disabled={loading}
-            >
-              {loading
-                  ? <ActivityIndicator color="white" />
-                  : <Text style={styles.buttonText}>Se connecter</Text>
-              }
-            </TouchableOpacity>
-
-            {/* Séparateur */}
-            <View style={styles.separator}>
-              <View style={styles.separatorLine} />
-              <Text style={styles.separatorText}>ou</Text>
-              <View style={styles.separatorLine} />
-            </View>
-
-            {/* Google */}
-            <TouchableOpacity
-                style={[styles.googleBtn, (!request || loading) && { opacity: 0.6 }]}
-                onPress={() => promptAsync()}
-                disabled={!request || loading}
-            >
-              <AntDesign name="google" size={20} color="#EA4335" />
-              <Text style={styles.googleBtnText}>Continuer avec Google</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-              <Text style={styles.link}>
-                Pas encore de compte ?{" "}
-                <Text style={styles.linkAccent}>S'inscrire</Text>
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-        </ScrollView>
-      </KeyboardAvoidingView>
+          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+            <Text style={styles.link}>
+              Pas encore de compte ?{" "}
+              <Text style={styles.linkAccent}>S'inscrire</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1, backgroundColor: "#111111",
-    justifyContent: "center", alignItems: "center",
-  },
-  keyboardView: { flex: 1, backgroundColor: "#111111" },
-  scrollContent: {
-    flexGrow: 1, justifyContent: "center",
-    paddingHorizontal: 24, paddingVertical: 60, gap: 36,
-  },
+function makeStyles(theme) {
+  return StyleSheet.create({
+    keyboardView: { flex: 1, backgroundColor: theme.bg },
+    scrollContent: {
+      flexGrow: 1, justifyContent: "center",
+      paddingHorizontal: 24, paddingVertical: 60, gap: 36,
+    },
 
-  logoBlock: { alignItems: "center" },
-  logo: { width: 200, height: 55, resizeMode: "contain" },
+    logoBlock: { alignItems: "center" },
+    logo: { width: 200, height: 55, resizeMode: "contain" },
 
-  titleBlock: { gap: 8 },
-  titleMain: { color: "white", fontSize: 30, fontFamily: "LexendDeca_700Bold" },
-  titleSub:  { color: "#888888", fontSize: 14, fontFamily: "LexendDeca_400Regular" },
+    titleBlock: { gap: 8 },
+    titleMain: { color: theme.text, fontSize: 30, fontFamily: "LexendDeca_700Bold" },
+    titleSub:  { color: theme.textMuted, fontSize: 14, fontFamily: "LexendDeca_400Regular" },
 
-  form: { gap: 14 },
-  inputWrapper: {
-    flexDirection: "row", alignItems: "center",
-    backgroundColor: "#1A1A1A", borderWidth: 1, borderColor: "#2A2A2A",
-    borderRadius: 14, paddingHorizontal: 14, height: 54, gap: 10,
-  },
-  input: { flex: 1, color: "white", fontFamily: "LexendDeca_400Regular", fontSize: 15 },
+    form: { gap: 14 },
+    inputWrapper: {
+      flexDirection: "row", alignItems: "center",
+      backgroundColor: theme.inputBg, borderWidth: 1, borderColor: theme.border,
+      borderRadius: 14, paddingHorizontal: 14, height: 54, gap: 10,
+    },
+    input: { flex: 1, color: theme.text, fontFamily: "LexendDeca_400Regular", fontSize: 15 },
 
-  footer: { gap: 14, alignItems: "center" },
-  button: {
-    backgroundColor: PRIMARY, borderRadius: 14, paddingVertical: 16,
-    alignItems: "center", width: "100%",
-  },
-  buttonText: { color: "white", fontSize: 16, fontFamily: "LexendDeca_700Bold" },
+    footer: { gap: 14, alignItems: "center" },
+    button: {
+      backgroundColor: PRIMARY, borderRadius: 14, paddingVertical: 16,
+      alignItems: "center", width: "100%",
+    },
+    buttonText: { color: "white", fontSize: 16, fontFamily: "LexendDeca_700Bold" },
 
-  separator: { flexDirection: "row", alignItems: "center", gap: 10, width: "100%" },
-  separatorLine: { flex: 1, height: 1, backgroundColor: "#2A2A2A" },
-  separatorText: { color: "#555", fontFamily: "LexendDeca_400Regular", fontSize: 13 },
+    separator: { flexDirection: "row", alignItems: "center", gap: 10, width: "100%" },
+    separatorLine: { flex: 1, height: 1, backgroundColor: theme.border },
+    separatorText: { color: theme.placeholder, fontFamily: "LexendDeca_400Regular", fontSize: 13 },
 
-  googleBtn: {
-    flexDirection: "row", alignItems: "center", justifyContent: "center",
-    backgroundColor: "#1A1A1A", borderWidth: 1, borderColor: "#2A2A2A",
-    borderRadius: 14, paddingVertical: 14, width: "100%", gap: 10,
-  },
-  googleBtnText: { color: "white", fontSize: 15, fontFamily: "LexendDeca_700Bold" },
+    googleBtn: {
+      flexDirection: "row", alignItems: "center", justifyContent: "center",
+      backgroundColor: theme.inputBg, borderWidth: 1, borderColor: theme.border,
+      borderRadius: 14, paddingVertical: 14, width: "100%", gap: 10,
+    },
+    googleBtnText: { color: theme.text, fontSize: 15, fontFamily: "LexendDeca_700Bold" },
 
-  link: { color: "#888888", fontSize: 14, fontFamily: "LexendDeca_400Regular", textAlign: "center" },
-  linkAccent: { color: PRIMARY, fontFamily: "LexendDeca_700Bold" },
-});
+    link: { color: theme.textMuted, fontSize: 14, fontFamily: "LexendDeca_400Regular", textAlign: "center" },
+    linkAccent: { color: PRIMARY, fontFamily: "LexendDeca_700Bold" },
+  });
+}

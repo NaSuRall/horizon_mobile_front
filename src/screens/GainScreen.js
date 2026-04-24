@@ -16,7 +16,10 @@ const TX_ICONS = [Bookmark, X, Wrench, Camera, Square, Binoculars];
 function TransactionIcon({ index, theme }) {
     const Icon = TX_ICONS[index % TX_ICONS.length];
     return (
-        <View style={{ width: 42, height: 42, backgroundColor: theme.secondary, borderRadius: 10, justifyContent: "center", alignItems: "center" }}>
+        <View style={{
+            width: 42, height: 42, backgroundColor: theme.secondary,
+            borderRadius: 10, justifyContent: "center", alignItems: "center",
+        }}>
             <Icon color={theme.primary} size={20} />
         </View>
     );
@@ -24,10 +27,10 @@ function TransactionIcon({ index, theme }) {
 
 export default function GainScreen() {
     const { fetchWithAuth } = useContext(AuthContext);
-    const theme  = useTheme();
-    const route  = useRoute();
+    const theme = useTheme();
+    const route = useRoute();
 
-    const [fontsLoaded] = useFonts({ LexendDeca_400Regular, LexendDeca_700Bold });
+    const [fontsLoaded]  = useFonts({ LexendDeca_400Regular, LexendDeca_700Bold });
     const [activeTab,    setActiveTab]    = useState("historique");
     const [transactions, setTransactions] = useState([]);
     const [redemptions,  setRedemptions]  = useState([]);
@@ -37,12 +40,10 @@ export default function GainScreen() {
 
     const styles = makeStyles(theme);
 
-    // Bascule sur l'onglet demandé quand on navigue depuis la boutique
     useEffect(() => {
         if (route.params?.tab) setActiveTab(route.params.tab);
     }, [route.params?.tab]);
 
-    // Recharge les données à chaque fois que l'écran est affiché
     useFocusEffect(
         useCallback(() => {
             let active = true;
@@ -170,7 +171,7 @@ export default function GainScreen() {
                         </View>
                     ) : redemptions.length === 0 ? (
                         <View style={styles.emptyBox}>
-                            <Gift size={32} color="#444" />
+                            <Gift size={32} color={theme.textFaint} />
                             <Text style={styles.emptyText}>Aucune récompense échangée</Text>
                             <Text style={styles.emptySubText}>Rendez-vous dans la boutique !</Text>
                         </View>
@@ -197,15 +198,15 @@ export default function GainScreen() {
                                     styles.statusBadge,
                                     isPending(rd.status)
                                         ? { backgroundColor: theme.secondary, borderColor: theme.primary }
-                                        : { backgroundColor: "#1E1E1E", borderColor: "#333" },
+                                        : { backgroundColor: theme.cardAlt, borderColor: theme.border },
                                 ]}>
                                     {isPending(rd.status)
                                         ? <Clock size={11} color={theme.primary} />
-                                        : <CheckCircle size={11} color="#555" />
+                                        : <CheckCircle size={11} color={theme.textFaint} />
                                     }
                                     <Text style={[
                                         styles.statusText,
-                                        { color: isPending(rd.status) ? theme.primary : "#555" },
+                                        { color: isPending(rd.status) ? theme.primary : theme.textFaint },
                                     ]}>
                                         {isPending(rd.status) ? "En attente" : "Utilisé"}
                                     </Text>
@@ -216,27 +217,24 @@ export default function GainScreen() {
                 </ScrollView>
             )}
 
-            {/* ── Modal code QR (appui sur une récompense pending) ── */}
+            {/* ── Modal code QR ── */}
             <Modal visible={!!codeModal} transparent animationType="fade">
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalBox}>
                         <Gift size={36} color={theme.primary} />
                         <Text style={styles.modalTitle}>{codeModal?.reward_name}</Text>
                         <Text style={styles.modalHint}>Montrez ce code au caissier</Text>
-
                         <Text style={styles.modalCode}>{codeModal?.code}</Text>
-
                         <View style={styles.qrWrap}>
                             {codeModal?.code && (
                                 <QRCode
                                     value={codeModal.code}
                                     size={160}
-                                    color="#ffffff"
-                                    backgroundColor="#1A1A1A"
+                                    color={theme.text}
+                                    backgroundColor="transparent"
                                 />
                             )}
                         </View>
-
                         <TouchableOpacity
                             style={[styles.closeBtn, { backgroundColor: theme.primary }]}
                             onPress={() => setCodeModal(null)}
@@ -254,11 +252,11 @@ export default function GainScreen() {
 function makeStyles(theme) {
     return StyleSheet.create({
         loadingContainer: {
-            flex: 1, backgroundColor: "#111111",
+            flex: 1, backgroundColor: theme.bg,
             justifyContent: "center", alignItems: "center",
         },
         container: {
-            flex: 1, backgroundColor: "#111111",
+            flex: 1, backgroundColor: theme.bg,
             paddingTop: 50, paddingHorizontal: 16,
         },
         header: {
@@ -266,42 +264,35 @@ function makeStyles(theme) {
             alignItems: "center", marginBottom: 20,
         },
         logo:       { width: 140, height: 45, resizeMode: "contain" },
-        headerSpan: { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 13 },
+        headerSpan: { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 13 },
 
         titleBlock: { gap: 2, marginBottom: 14 },
-        titleSub:   { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 13, letterSpacing: 1 },
+        titleSub:   { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 13, letterSpacing: 1 },
         titleMain:  { fontFamily: "LexendDeca_700Bold", fontSize: 30, letterSpacing: 1 },
-        titleCount: { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 13, marginTop: 4 },
+        titleCount: { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 13, marginTop: 4 },
 
-        // Sélecteur onglets
-        tabSwitcher: {
-            flexDirection: "row", gap: 10, marginBottom: 16,
-        },
+        tabSwitcher: { flexDirection: "row", gap: 10, marginBottom: 16 },
         switchBtn: {
             flex: 1, paddingVertical: 10, borderRadius: 12,
-            borderWidth: 1.5, borderColor: "#2A2A2A",
-            alignItems: "center", backgroundColor: "#1A1A1A",
+            borderWidth: 1.5, borderColor: theme.border,
+            alignItems: "center", backgroundColor: theme.card,
         },
-        switchBtnText: {
-            color: "#666", fontFamily: "LexendDeca_700Bold", fontSize: 13,
-        },
+        switchBtnText: { color: theme.textMuted, fontFamily: "LexendDeca_700Bold", fontSize: 13 },
 
         scrollContent: { gap: 10, paddingBottom: 120 },
 
-        // Transactions
         txItem: {
-            backgroundColor: "#1A1A1A", borderWidth: 1, borderColor: "#2A2A2A",
+            backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border,
             borderRadius: 14, paddingHorizontal: 14, paddingVertical: 14,
             flexDirection: "row", alignItems: "center", gap: 14,
         },
         txInfo:   { flex: 1, gap: 3 },
-        txLabel:  { color: "white", fontFamily: "LexendDeca_700Bold", fontSize: 14 },
-        txDate:   { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 12 },
+        txLabel:  { color: theme.text, fontFamily: "LexendDeca_700Bold", fontSize: 14 },
+        txDate:   { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 12 },
         txPoints: { fontFamily: "LexendDeca_700Bold", fontSize: 14 },
 
-        // Récompenses
         rdItem: {
-            backgroundColor: "#1A1A1A", borderWidth: 1.5, borderColor: "#2A2A2A",
+            backgroundColor: theme.card, borderWidth: 1.5, borderColor: theme.border,
             borderRadius: 14, paddingHorizontal: 14, paddingVertical: 14,
             flexDirection: "row", alignItems: "center", gap: 14,
         },
@@ -309,10 +300,10 @@ function makeStyles(theme) {
             width: 42, height: 42, borderRadius: 10,
             justifyContent: "center", alignItems: "center",
         },
-        rdInfo:   { flex: 1, gap: 3 },
-        rdName:   { color: "white", fontFamily: "LexendDeca_700Bold", fontSize: 14 },
-        rdCode:   { color: "#aaa", fontFamily: "LexendDeca_400Regular", fontSize: 13, letterSpacing: 1 },
-        rdDate:   { color: "#666", fontFamily: "LexendDeca_400Regular", fontSize: 11 },
+        rdInfo:  { flex: 1, gap: 3 },
+        rdName:  { color: theme.text, fontFamily: "LexendDeca_700Bold", fontSize: 14 },
+        rdCode:  { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 13, letterSpacing: 1 },
+        rdDate:  { color: theme.textFaint, fontFamily: "LexendDeca_400Regular", fontSize: 11 },
         statusBadge: {
             flexDirection: "row", alignItems: "center", gap: 4,
             paddingHorizontal: 8, paddingVertical: 4,
@@ -320,33 +311,31 @@ function makeStyles(theme) {
         },
         statusText: { fontSize: 11, fontFamily: "LexendDeca_700Bold" },
 
-        // Empty
         emptyBox: {
-            backgroundColor: "#1A1A1A", borderWidth: 1, borderColor: "#2A2A2A",
+            backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border,
             borderRadius: 14, paddingVertical: 36,
             alignItems: "center", gap: 10,
         },
-        emptyText:    { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 14 },
-        emptySubText: { color: "#555", fontFamily: "LexendDeca_400Regular", fontSize: 12 },
+        emptyText:    { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 14 },
+        emptySubText: { color: theme.textFaint, fontFamily: "LexendDeca_400Regular", fontSize: 12 },
 
-        // Modal code
         modalOverlay: {
             flex: 1, backgroundColor: "rgba(0,0,0,0.88)",
             justifyContent: "center", alignItems: "center", padding: 24,
         },
         modalBox: {
-            backgroundColor: "#1A1A1A", borderRadius: 20,
+            backgroundColor: theme.card, borderRadius: 20,
             padding: 28, alignItems: "center", gap: 12, width: "100%",
         },
-        modalTitle: { color: "#fff", fontSize: 18, fontFamily: "LexendDeca_700Bold", textAlign: "center" },
-        modalHint:  { color: "#888", fontSize: 13, fontFamily: "LexendDeca_400Regular" },
+        modalTitle: { color: theme.text, fontSize: 18, fontFamily: "LexendDeca_700Bold", textAlign: "center" },
+        modalHint:  { color: theme.textMuted, fontSize: 13, fontFamily: "LexendDeca_400Regular" },
         modalCode: {
-            color: "#fff", fontSize: 26, fontFamily: "LexendDeca_700Bold",
+            color: theme.text, fontSize: 26, fontFamily: "LexendDeca_700Bold",
             letterSpacing: 3, marginVertical: 4,
         },
         qrWrap: {
-            padding: 14, backgroundColor: "#1A1A1A",
-            borderWidth: 1, borderColor: "#2A2A2A", borderRadius: 12,
+            padding: 14, backgroundColor: theme.cardAlt,
+            borderWidth: 1, borderColor: theme.border, borderRadius: 12,
         },
         closeBtn: {
             width: "100%", paddingVertical: 13, borderRadius: 12,

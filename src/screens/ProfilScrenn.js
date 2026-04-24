@@ -1,7 +1,10 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
+import {
+    View, Text, StyleSheet, TextInput, TouchableOpacity,
+    ScrollView, ActivityIndicator, Switch,
+} from "react-native";
 import { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { LogOut, User, Mail, Lock, Star, KeyRound } from "lucide-react-native";
+import { LogOut, User, Mail, Lock, Star, KeyRound, Sun, Moon } from "lucide-react-native";
 import { useFonts, LexendDeca_400Regular, LexendDeca_700Bold } from '@expo-google-fonts/lexend-deca';
 import { useTheme, isLightColor } from "../context/ThemeContext";
 import Toast from "react-native-toast-message";
@@ -54,7 +57,7 @@ export default function ProfileScreen() {
         { method: "PUT", body: JSON.stringify(body) }
       );
 
-      if (!response) return; // 401 → déjà déconnecté
+      if (!response) return;
 
       const data = await response.json();
 
@@ -123,52 +126,73 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Modifier email */}
+        {/* Apparence */}
+        <Text style={styles.sectionTitle}>Apparence</Text>
+        <View style={styles.card}>
+          <View style={styles.infoRow}>
+            {theme.isDark
+              ? <Moon size={16} color={theme.textMuted} />
+              : <Sun size={16} color={theme.textMuted} />
+            }
+            <View style={styles.infoContent}>
+              <Text style={styles.infoLabel}>Thème</Text>
+              <Text style={styles.infoValue}>{theme.isDark ? "Mode sombre" : "Mode clair"}</Text>
+            </View>
+            <Switch
+              value={!theme.isDark}
+              onValueChange={theme.toggleMode}
+              trackColor={{ false: theme.switchTrack, true: theme.primary }}
+              thumbColor="#ffffff"
+            />
+          </View>
+        </View>
+
+        {/* Modifier email / mot de passe */}
         <Text style={styles.sectionTitle}>Modifier mes informations</Text>
         <View style={styles.card}>
           <View style={styles.inputRow}>
-            <Mail size={16} color="#888888" />
+            <Mail size={16} color={theme.textMuted} />
             <TextInput
               style={styles.input}
               value={email}
               onChangeText={setEmail}
               placeholder="Adresse email"
-              placeholderTextColor="#555"
+              placeholderTextColor={theme.placeholder}
               keyboardType="email-address"
               autoCapitalize="none"
             />
           </View>
           <View style={styles.divider} />
           <View style={styles.inputRow}>
-            <Lock size={16} color="#888888" />
+            <Lock size={16} color={theme.textMuted} />
             <TextInput
               style={styles.input}
               secureTextEntry
               value={password}
               onChangeText={setPassword}
               placeholder="Nouveau mot de passe"
-              placeholderTextColor="#555"
+              placeholderTextColor={theme.placeholder}
             />
           </View>
           {password.length > 0 && (
             <>
               <View style={styles.divider} />
               <View style={styles.inputRow}>
-                <KeyRound size={16} color="#888888" />
+                <KeyRound size={16} color={theme.textMuted} />
                 <TextInput
                   style={styles.input}
                   secureTextEntry
                   value={currentPassword}
                   onChangeText={setCurrentPassword}
                   placeholder="Mot de passe actuel"
-                  placeholderTextColor="#555"
+                  placeholderTextColor={theme.placeholder}
                 />
               </View>
             </>
           )}
         </View>
 
-        {/* Bouton sauvegarder */}
+        {/* Sauvegarder */}
         <TouchableOpacity
           style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
           onPress={handleSave}
@@ -180,7 +204,7 @@ export default function ProfileScreen() {
           }
         </TouchableOpacity>
 
-        {/* Bouton déconnexion */}
+        {/* Déconnexion */}
         <TouchableOpacity style={styles.logoutButton} onPress={logout}>
           <LogOut color={theme.primary} size={18} />
           <Text style={styles.logoutText}>Se déconnecter</Text>
@@ -194,17 +218,13 @@ export default function ProfileScreen() {
 function makeStyles(theme, isLight) {
   return StyleSheet.create({
     loadingContainer: {
-      flex: 1, backgroundColor: "#111111",
+      flex: 1, backgroundColor: theme.bg,
       justifyContent: "center", alignItems: "center",
     },
-    container: {
-      flex: 1, backgroundColor: "#111111", paddingTop: 50,
-    },
+    container: { flex: 1, backgroundColor: theme.bg, paddingTop: 50 },
 
-    header: {
-      paddingHorizontal: 16, marginBottom: 8, alignItems: "flex-end",
-    },
-    headerSpan: { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 13 },
+    header: { paddingHorizontal: 16, marginBottom: 8, alignItems: "flex-end" },
+    headerSpan: { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 13 },
 
     scrollContent: { paddingHorizontal: 16, paddingBottom: 120, gap: 16 },
 
@@ -215,51 +235,40 @@ function makeStyles(theme, isLight) {
       borderWidth: 2, borderColor: theme.primary,
       justifyContent: "center", alignItems: "center",
     },
-    avatarText: {
-      color: theme.primary,
-      fontSize: 28, fontFamily: "LexendDeca_700Bold",
-    },
-    userName: {
-      color: "white", fontSize: 22, fontFamily: "LexendDeca_700Bold",
-    },
+    avatarText: { color: theme.primary, fontSize: 28, fontFamily: "LexendDeca_700Bold" },
+    userName:   { color: theme.text, fontSize: 22, fontFamily: "LexendDeca_700Bold" },
     rankBadge: {
       borderWidth: 1, borderColor: theme.primary,
       borderRadius: 20, paddingHorizontal: 14, paddingVertical: 4,
     },
-    rankBadgeText: {
-      color: theme.primary, fontSize: 13, fontFamily: "LexendDeca_400Regular",
-    },
+    rankBadgeText: { color: theme.primary, fontSize: 13, fontFamily: "LexendDeca_400Regular" },
 
     card: {
-      backgroundColor: "#1A1A1A", borderWidth: 1, borderColor: "#2A2A2A",
+      backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border,
       borderRadius: 16, padding: 16, gap: 12,
     },
-    divider: { height: 0.5, backgroundColor: "#2A2A2A" },
+    divider: { height: 0.5, backgroundColor: theme.border },
 
-    infoRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+    infoRow:    { flexDirection: "row", alignItems: "center", gap: 12 },
     infoContent: { flex: 1 },
-    infoLabel: { color: "#888888", fontSize: 12, fontFamily: "LexendDeca_400Regular" },
-    infoValue: { color: "white", fontSize: 15, fontFamily: "LexendDeca_700Bold" },
-    infoValueAccent: {
-      color: theme.primary,
-      fontSize: 15, fontFamily: "LexendDeca_700Bold",
-    },
+    infoLabel:   { color: theme.textMuted, fontSize: 12, fontFamily: "LexendDeca_400Regular" },
+    infoValue:   { color: theme.text, fontSize: 15, fontFamily: "LexendDeca_700Bold" },
+    infoValueAccent: { color: theme.primary, fontSize: 15, fontFamily: "LexendDeca_700Bold" },
 
     sectionTitle: {
-      color: "#888888", fontSize: 12,
+      color: theme.textMuted, fontSize: 12,
       fontFamily: "LexendDeca_400Regular", letterSpacing: 1,
     },
 
     inputRow: { flexDirection: "row", alignItems: "center", gap: 12 },
     input: {
-      flex: 1, color: "white",
+      flex: 1, color: theme.text,
       fontFamily: "LexendDeca_400Regular", fontSize: 15,
     },
 
     saveButton: {
       backgroundColor: theme.primary,
-      borderRadius: 14, paddingVertical: 16,
-      alignItems: "center",
+      borderRadius: 14, paddingVertical: 16, alignItems: "center",
     },
     saveButtonDisabled: { opacity: 0.6 },
     saveText: {
@@ -270,13 +279,10 @@ function makeStyles(theme, isLight) {
     logoutButton: {
       flexDirection: "row", justifyContent: "center",
       alignItems: "center", gap: 10,
-      backgroundColor: "#1A1A1A",
-      borderWidth: 1, borderColor: "#2A2A2A",
+      backgroundColor: theme.card,
+      borderWidth: 1, borderColor: theme.border,
       borderRadius: 14, paddingVertical: 16,
     },
-    logoutText: {
-      color: theme.primary,
-      fontSize: 16, fontFamily: "LexendDeca_700Bold",
-    },
+    logoutText: { color: theme.primary, fontSize: 16, fontFamily: "LexendDeca_700Bold" },
   });
 }

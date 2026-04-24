@@ -334,48 +334,48 @@ export default function QrcodeScreen() {
 function makeStyles(theme) {
     return StyleSheet.create({
         loadingContainer: {
-            flex: 1, backgroundColor: "#111111",
+            flex: 1, backgroundColor: theme.bg,
             justifyContent: "center", alignItems: "center",
         },
         container: {
-            flex: 1, backgroundColor: "#111111",
+            flex: 1, backgroundColor: theme.bg,
             paddingTop: 50, paddingHorizontal: 16, gap: 20,
         },
         header: {
             flexDirection: "row", justifyContent: "space-between", alignItems: "center",
         },
         logo: { width: 140, height: 45, resizeMode: "contain" },
-        headerSpan: { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 13 },
+        headerSpan: { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 13 },
         adminBadge: {
             paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8,
         },
         adminBadgeText: { fontFamily: "LexendDeca_700Bold", fontSize: 12, letterSpacing: 1 },
 
         subtitle: {
-            color: "#888888", fontFamily: "LexendDeca_400Regular",
+            color: theme.textMuted, fontFamily: "LexendDeca_400Regular",
             fontSize: 15, textAlign: "center", lineHeight: 22, marginTop: 8,
         },
 
-        // Client QR
+        // Client QR — always white background so QR code is scannable
         qrWrapper: { alignItems: "center", justifyContent: "center" },
         qrBox: {
             backgroundColor: "white", padding: 20, borderRadius: 16,
             borderWidth: 3, minHeight: 260, alignItems: "center", justifyContent: "center",
         },
         errorBox: { width: 220, alignItems: "center", justifyContent: "center" },
-        errorText: { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 14, textAlign: "center", lineHeight: 20 },
+        errorText: { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 14, textAlign: "center", lineHeight: 20 },
         codeBox: {
-            backgroundColor: "#1A1A1A", borderWidth: 1, borderColor: "#2A2A2A",
+            backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border,
             borderRadius: 12, paddingVertical: 14, alignItems: "center",
         },
         codeText: { color: theme.primary, fontFamily: "LexendDeca_400Regular", fontSize: 16, letterSpacing: 1.5 },
         infoCard: {
-            backgroundColor: "#1A1A1A", borderWidth: 1, borderColor: "#2A2A2A",
+            backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border,
             borderRadius: 14, padding: 16, flexDirection: "row", alignItems: "flex-start", gap: 12,
         },
         infoDot: { width: 12, height: 12, borderRadius: 6, marginTop: 3 },
-        infoText: { flex: 1, color: "white", fontFamily: "LexendDeca_400Regular", fontSize: 14, lineHeight: 22 },
-        infoHint: { color: "#888888", fontSize: 12 },
+        infoText: { flex: 1, color: theme.text, fontFamily: "LexendDeca_400Regular", fontSize: 14, lineHeight: 22 },
+        infoHint: { color: theme.textMuted, fontSize: 12 },
 
         // Admin camera
         cameraWrapper: {
@@ -384,7 +384,7 @@ function makeStyles(theme) {
         },
         camera: { flex: 1 },
         cameraPlaceholder: {
-            flex: 1, backgroundColor: "#1A1A1A",
+            flex: 1, backgroundColor: theme.card,
             justifyContent: "center", alignItems: "center",
         },
         scanOverlay: {
@@ -402,12 +402,12 @@ function makeStyles(theme) {
 
         // Permission
         permContainer: {
-            flex: 1, backgroundColor: "#111111",
+            flex: 1, backgroundColor: theme.bg,
             justifyContent: "center", alignItems: "center",
             paddingHorizontal: 32, gap: 16,
         },
-        permTitle: { color: "#fff", fontFamily: "LexendDeca_700Bold", fontSize: 20, textAlign: "center" },
-        permSub:   { color: "#888", fontFamily: "LexendDeca_400Regular", fontSize: 14, textAlign: "center" },
+        permTitle: { color: theme.text, fontFamily: "LexendDeca_700Bold", fontSize: 20, textAlign: "center" },
+        permSub:   { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 14, textAlign: "center" },
         permBtn:   { paddingHorizontal: 24, paddingVertical: 14, borderRadius: 14, marginTop: 8 },
         permBtnText: { color: "#fff", fontFamily: "LexendDeca_700Bold", fontSize: 15 },
 
@@ -418,7 +418,7 @@ function makeStyles(theme) {
         },
         modalScroll: { flexGrow: 1, justifyContent: "flex-end" },
         modalBox: {
-            backgroundColor: "#1A1A1A", borderTopLeftRadius: 24, borderTopRightRadius: 24,
+            backgroundColor: theme.card, borderTopLeftRadius: 24, borderTopRightRadius: 24,
             padding: 28, alignItems: "center", gap: 12,
         },
 
@@ -426,8 +426,8 @@ function makeStyles(theme) {
             width: 64, height: 64, borderRadius: 32,
             justifyContent: "center", alignItems: "center",
         },
-        modalName:  { color: "#fff", fontFamily: "LexendDeca_700Bold", fontSize: 20 },
-        modalEmail: { color: "#888", fontFamily: "LexendDeca_400Regular", fontSize: 13 },
+        modalName:  { color: theme.text, fontFamily: "LexendDeca_700Bold", fontSize: 20 },
+        modalEmail: { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 13 },
 
         pointsRow: { flexDirection: "row", gap: 12, alignItems: "center", marginTop: 4 },
         pointsBadge: {
@@ -441,22 +441,22 @@ function makeStyles(theme) {
         },
         rankText: { fontFamily: "LexendDeca_700Bold", fontSize: 14 },
 
-        amountLabel: { color: "#888", fontFamily: "LexendDeca_400Regular", fontSize: 13, alignSelf: "flex-start", marginTop: 4 },
+        amountLabel: { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 13, alignSelf: "flex-start", marginTop: 4 },
         amountRow: { width: "100%" },
         amountInput: {
             flexDirection: "row", alignItems: "center", gap: 10,
-            backgroundColor: "#222", borderWidth: 1, borderColor: "#333",
+            backgroundColor: theme.cardAlt, borderWidth: 1, borderColor: theme.border,
             borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12,
         },
-        amountField: { flex: 1, color: "#fff", fontFamily: "LexendDeca_700Bold", fontSize: 18 },
-        amountUnit: { color: "#666", fontFamily: "LexendDeca_400Regular", fontSize: 13 },
+        amountField: { flex: 1, color: theme.text, fontFamily: "LexendDeca_700Bold", fontSize: 18 },
+        amountUnit: { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 13 },
 
         modalBtns: { flexDirection: "row", gap: 12, width: "100%", marginTop: 8 },
         cancelBtn: {
             flex: 1, paddingVertical: 14, borderRadius: 12,
-            borderWidth: 1, borderColor: "#333", alignItems: "center",
+            borderWidth: 1, borderColor: theme.border, alignItems: "center",
         },
-        cancelBtnText: { color: "#aaa", fontFamily: "LexendDeca_700Bold", fontSize: 15 },
+        cancelBtnText: { color: theme.textMuted, fontFamily: "LexendDeca_700Bold", fontSize: 15 },
         confirmBtn: {
             flex: 1, paddingVertical: 14, borderRadius: 12,
             alignItems: "center", justifyContent: "center",
@@ -464,8 +464,8 @@ function makeStyles(theme) {
         confirmBtnText: { color: "#fff", fontFamily: "LexendDeca_700Bold", fontSize: 15 },
 
         // Success modal (centré)
-        successTitle:  { color: "#fff", fontFamily: "LexendDeca_700Bold", fontSize: 22, marginTop: 8 },
+        successTitle:  { color: theme.text, fontFamily: "LexendDeca_700Bold", fontSize: 22, marginTop: 8 },
         successSub:    { color: "#2ECC71", fontFamily: "LexendDeca_700Bold", fontSize: 18 },
-        successDetail: { color: "#ccc", fontFamily: "LexendDeca_400Regular", fontSize: 14, textAlign: "center" },
+        successDetail: { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 14, textAlign: "center" },
     });
 }

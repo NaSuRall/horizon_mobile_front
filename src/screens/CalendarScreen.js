@@ -13,7 +13,7 @@ const MONTHS = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Aoû","Sep","Oct",
 const DAYS   = ["Su","Mo","Tu","We","Th","Fr","Sa"];
 const YEARS  = Array.from({ length: 10 }, (_, i) => 2023 + i);
 
-function getDaysInMonth(year, month)  { return new Date(year, month + 1, 0).getDate(); }
+function getDaysInMonth(year, month)     { return new Date(year, month + 1, 0).getDate(); }
 function getFirstDayOfMonth(year, month) { return new Date(year, month, 1).getDay(); }
 
 export default function CalendarScreen() {
@@ -37,7 +37,6 @@ export default function CalendarScreen() {
             try {
                 const response = await fetchWithAuth(`${process.env.EXPO_PUBLIC_API_URL}/events`);
                 if (!response) return;
-
                 const data = await response.json();
                 if (!response.ok) {
                     Toast.show({ type: "error", text1: "Erreur", text2: data.error ?? "Impossible de charger les événements" });
@@ -67,7 +66,6 @@ export default function CalendarScreen() {
         Array.from({ length: daysInMonth }, (_, i) => i + 1)
     );
 
-    // Événements du mois/année actuellement affichés
     const monthEvents = events.filter(e => e.month === month + 1 && e.year === year);
     const eventDays   = new Set(monthEvents.map(e => e.day));
 
@@ -82,11 +80,8 @@ export default function CalendarScreen() {
         setSelected(null);
     };
 
-    const filteredEvents = selected
-        ? monthEvents.filter(e => e.day === selected)
-        : monthEvents;
-
-    const navIconColor = isLight ? "#111111" : "white";
+    const filteredEvents = selected ? monthEvents.filter(e => e.day === selected) : monthEvents;
+    const navIconColor   = isLight ? "#111111" : "white";
 
     return (
         <View style={styles.container}>
@@ -105,7 +100,7 @@ export default function CalendarScreen() {
                     <Text style={styles.titleMain}>MON CALENDRIER</Text>
                 </View>
 
-                {/* Calendar card */}
+                {/* Calendar card — always light bg for readability */}
                 <View style={styles.calendarCard}>
 
                     {/* Month/Year navigation */}
@@ -123,7 +118,7 @@ export default function CalendarScreen() {
                                         style={[styles.pickerItem, month === i && styles.pickerItemActive]}
                                     >
                                         <Text style={[styles.pickerText, month === i && styles.pickerTextActive]}>{m}</Text>
-                                        <ChevronRight color={month === i ? (isLight ? "#111111" : "white") : "#888"} size={12} />
+                                        <ChevronRight color={month === i ? navIconColor : "#888"} size={12} />
                                     </TouchableOpacity>
                                 ))}
                             </ScrollView>
@@ -138,7 +133,7 @@ export default function CalendarScreen() {
                                         style={[styles.pickerItem, year === y && styles.pickerItemActive]}
                                     >
                                         <Text style={[styles.pickerText, year === y && styles.pickerTextActive]}>{y}</Text>
-                                        <ChevronRight color={year === y ? (isLight ? "#111111" : "white") : "#888"} size={12} />
+                                        <ChevronRight color={year === y ? navIconColor : "#888"} size={12} />
                                     </TouchableOpacity>
                                 ))}
                             </ScrollView>
@@ -151,9 +146,7 @@ export default function CalendarScreen() {
 
                     {/* Days header */}
                     <View style={styles.daysHeader}>
-                        {DAYS.map(d => (
-                            <Text key={d} style={styles.dayLabel}>{d}</Text>
-                        ))}
+                        {DAYS.map(d => <Text key={d} style={styles.dayLabel}>{d}</Text>)}
                     </View>
 
                     {/* Grid */}
@@ -191,7 +184,6 @@ export default function CalendarScreen() {
                             );
                         })}
                     </View>
-
                 </View>
 
                 {/* Events section */}
@@ -222,7 +214,7 @@ export default function CalendarScreen() {
                             ]}>
                                 <Text style={[
                                     styles.eventDateText,
-                                    { color: event.badgeType === "red" && isLight ? "#111111" : "white" }
+                                    { color: event.badgeType === "red" && isLight ? "#111111" : "white" },
                                 ]}>
                                     {String(event.day).padStart(2, "0")}
                                 </Text>
@@ -257,11 +249,11 @@ export default function CalendarScreen() {
 function makeStyles(theme, isLight) {
     return StyleSheet.create({
         loadingContainer: {
-            flex: 1, backgroundColor: "#111111",
+            flex: 1, backgroundColor: theme.bg,
             justifyContent: "center", alignItems: "center",
         },
         container: {
-            flex: 1, backgroundColor: "#111111",
+            flex: 1, backgroundColor: theme.bg,
             paddingTop: 50, paddingHorizontal: 16,
         },
         header: {
@@ -269,15 +261,16 @@ function makeStyles(theme, isLight) {
             alignItems: "center", marginBottom: 16,
         },
         logo: { width: 140, height: 45, resizeMode: "contain" },
-        headerSpan: { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 13 },
+        headerSpan: { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 13 },
 
         scrollContent: { gap: 16, paddingBottom: 120 },
 
         titleBlock: { gap: 2 },
-        titleSub:  { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 12, letterSpacing: 1 },
-        titleMain: { color: theme.primary, fontFamily: "LexendDeca_700Bold", fontSize: 30, letterSpacing: 0.5 },
+        titleSub:   { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 12, letterSpacing: 1 },
+        titleMain:  { color: theme.primary, fontFamily: "LexendDeca_700Bold", fontSize: 30, letterSpacing: 0.5 },
 
-        calendarCard: { backgroundColor: "#F5F5F5", borderRadius: 20, padding: 16, gap: 12 },
+        // Calendar always uses a light card so numbers are readable
+        calendarCard: { backgroundColor: theme.calCard, borderRadius: 20, padding: 16, gap: 12 },
 
         calNavRow: { flexDirection: "row", alignItems: "center", gap: 6 },
         navBtn: { padding: 4, backgroundColor: theme.primary, borderRadius: 8 },
@@ -292,7 +285,7 @@ function makeStyles(theme, isLight) {
         pickerTextActive: { color: isLight ? "#111111" : "white" },
 
         daysHeader: { flexDirection: "row", justifyContent: "space-around" },
-        dayLabel:   { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 12, width: 36, textAlign: "center" },
+        dayLabel: { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 12, width: 36, textAlign: "center" },
 
         grid: { flexDirection: "row", flexWrap: "wrap" },
         cell: { width: "14.28%", alignItems: "center", paddingVertical: 3 },
@@ -302,29 +295,29 @@ function makeStyles(theme, isLight) {
         dayTextToday:   { color: "white" },
         eventDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: theme.primary, marginTop: 2 },
 
-        sectionTitle: { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 12, letterSpacing: 1 },
+        sectionTitle: { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 12, letterSpacing: 1 },
 
         eventItem: {
-            backgroundColor: "#1A1A1A", borderWidth: 1, borderColor: "#2A2A2A",
+            backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border,
             borderRadius: 14, paddingHorizontal: 14, paddingVertical: 14,
             flexDirection: "row", alignItems: "flex-start", gap: 14,
         },
         eventDateBox: {
-            width: 42, height: 42, backgroundColor: "#2A2A2A",
+            width: 42, height: 42, backgroundColor: theme.border,
             borderRadius: 10, justifyContent: "center", alignItems: "center",
         },
         eventDateText: { fontFamily: "LexendDeca_700Bold", fontSize: 16 },
 
         eventInfo: { flex: 1, gap: 4 },
-        eventTitle:    { color: "white", fontFamily: "LexendDeca_700Bold", fontSize: 14 },
-        eventLocation: { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 12 },
+        eventTitle:    { color: theme.text, fontFamily: "LexendDeca_700Bold", fontSize: 14 },
+        eventLocation: { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 12 },
 
         badge:          { alignSelf: "flex-start", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4, marginTop: 4 },
         badgeGreen:     { backgroundColor: "#0A2A0A", borderWidth: 1, borderColor: "#2ECC71" },
         badgeText:      { fontFamily: "LexendDeca_400Regular", fontSize: 12 },
         badgeTextGreen: { color: "#2ECC71" },
 
-        emptyBox:  { backgroundColor: "#1A1A1A", borderRadius: 14, paddingVertical: 30, alignItems: "center" },
-        emptyText: { color: "#888888", fontFamily: "LexendDeca_400Regular", fontSize: 14 },
+        emptyBox:  { backgroundColor: theme.card, borderRadius: 14, paddingVertical: 30, alignItems: "center" },
+        emptyText: { color: theme.textMuted, fontFamily: "LexendDeca_400Regular", fontSize: 14 },
     });
 }

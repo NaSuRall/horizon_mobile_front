@@ -11,6 +11,7 @@ import Toast from 'react-native-toast-message';
 import { useFonts, LexendDeca_400Regular, LexendDeca_700Bold } from '@expo-google-fonts/lexend-deca';
 import { Mail, Lock, User, Phone, AtSign, ChevronRight, ChevronLeft } from "lucide-react-native";
 import { AntDesign } from "@expo/vector-icons";
+import { useTheme } from "../context/ThemeContext";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -28,6 +29,8 @@ const STEPS = [
 
 export default function RegisterScreen({ navigation }) {
   const { login } = useContext(AuthContext);
+  const theme     = useTheme();
+
   const [step, setStep]     = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -38,9 +41,7 @@ export default function RegisterScreen({ navigation }) {
   });
 
   useEffect(() => {
-    if (response?.type === "success") {
-      handleGoogleResponse(response.authentication);
-    }
+    if (response?.type === "success") handleGoogleResponse(response.authentication);
   }, [response]);
 
   const handleGoogleResponse = async (authentication) => {
@@ -66,22 +67,17 @@ export default function RegisterScreen({ navigation }) {
   };
 
   const [form, setForm] = useState({
-    email:      "",
-    password:   "",
-    confirm:    "",
-    first_name: "",
-    last_name:  "",
-    pseudo:     "",
-    phone:      "",
+    email: "", password: "", confirm: "",
+    first_name: "", last_name: "", pseudo: "", phone: "",
   });
 
   const [fontsLoaded] = useFonts({ LexendDeca_400Regular, LexendDeca_700Bold });
 
   if (!fontsLoaded) {
     return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={PRIMARY} />
-        </View>
+      <View style={{ flex: 1, backgroundColor: theme.bg, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color={PRIMARY} />
+      </View>
     );
   }
 
@@ -90,38 +86,20 @@ export default function RegisterScreen({ navigation }) {
   const validate = () => {
     switch (step) {
       case 1:
-        if (!form.email.includes("@")) {
-          Toast.show({ type: "error", text1: "Email invalide" });
-          return false;
-        }
+        if (!form.email.includes("@")) { Toast.show({ type: "error", text1: "Email invalide" }); return false; }
         return true;
       case 2:
-        if (form.password.length < 6) {
-          Toast.show({ type: "error", text1: "Mot de passe trop court", text2: "Minimum 6 caractères" });
-          return false;
-        }
-        if (form.password !== form.confirm) {
-          Toast.show({ type: "error", text1: "Les mots de passe ne correspondent pas" });
-          return false;
-        }
+        if (form.password.length < 6) { Toast.show({ type: "error", text1: "Mot de passe trop court", text2: "Minimum 6 caractères" }); return false; }
+        if (form.password !== form.confirm) { Toast.show({ type: "error", text1: "Les mots de passe ne correspondent pas" }); return false; }
         return true;
       case 3:
-        if (!form.first_name.trim() || !form.last_name.trim()) {
-          Toast.show({ type: "error", text1: "Prénom et nom requis" });
-          return false;
-        }
+        if (!form.first_name.trim() || !form.last_name.trim()) { Toast.show({ type: "error", text1: "Prénom et nom requis" }); return false; }
         return true;
       case 4:
-        if (!form.pseudo.trim()) {
-          Toast.show({ type: "error", text1: "Pseudo requis" });
-          return false;
-        }
+        if (!form.pseudo.trim()) { Toast.show({ type: "error", text1: "Pseudo requis" }); return false; }
         return true;
       case 5:
-        if (form.phone.length < 10) {
-          Toast.show({ type: "error", text1: "Numéro de téléphone invalide" });
-          return false;
-        }
+        if (form.phone.length < 10) { Toast.show({ type: "error", text1: "Numéro de téléphone invalide" }); return false; }
         return true;
     }
   };
@@ -132,33 +110,18 @@ export default function RegisterScreen({ navigation }) {
     else handleSubmit();
   };
 
-  // ✅ Une seule requête à la fin
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const res = await api.post("/register", {
-        email:      form.email,
-        password:   form.password,
-        first_name: form.first_name,
-        last_name:  form.last_name,
-        pseudo:     form.pseudo,
-        phone:      form.phone,
+      await api.post("/register", {
+        email: form.email, password: form.password,
+        first_name: form.first_name, last_name: form.last_name,
+        pseudo: form.pseudo, phone: form.phone,
       });
-
-      Toast.show({
-        type: "success",
-        text1: "Inscription réussie !",
-        text2: `Bienvenue ${form.first_name} !`
-      });
-
+      Toast.show({ type: "success", text1: "Inscription réussie !", text2: `Bienvenue ${form.first_name} !` });
       navigation.navigate("Login");
-
     } catch (err) {
-      Toast.show({
-        type: "error",
-        text1: "Erreur lors de l'inscription",
-        text2: err?.response?.data?.message ?? "Veuillez réessayer"
-      });
+      Toast.show({ type: "error", text1: "Erreur lors de l'inscription", text2: err?.response?.data?.message ?? "Veuillez réessayer" });
       setStep(1);
     } finally {
       setLoading(false);
@@ -166,272 +129,248 @@ export default function RegisterScreen({ navigation }) {
   };
 
   const isLastStep = step === STEPS.length;
+  const styles = makeStyles(theme);
 
   return (
-      <KeyboardAvoidingView
-          style={styles.keyboardView}
-          behavior="padding"
+    <KeyboardAvoidingView style={styles.keyboardView} behavior="padding">
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bounces={false}
       >
-        <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            bounces={false}
-        >
+        {/* Logo */}
+        <View style={styles.logoBlock}>
+          <Image source={require("../../assets/logo.png")} style={styles.logo} />
+        </View>
 
-          {/* Logo */}
-          <View style={styles.logoBlock}>
-            <Image source={require("../../assets/logo.png")} style={styles.logo} />
+        {/* Progress bar */}
+        <View style={styles.progressBlock}>
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { width: `${(step / STEPS.length) * 100}%` }]} />
           </View>
+          <Text style={styles.progressText}>Étape {step} sur {STEPS.length}</Text>
+        </View>
 
-          {/* Progress bar */}
-          <View style={styles.progressBlock}>
-            <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: `${(step / STEPS.length) * 100}%` }]} />
+        {/* Title */}
+        <View style={styles.titleBlock}>
+          <Text style={styles.titleMain}>{STEPS[step - 1].title}</Text>
+          <Text style={styles.titleSub}>{STEPS[step - 1].subtitle}</Text>
+        </View>
+
+        {/* Champs par étape */}
+        <View style={styles.form}>
+          {step === 1 && (
+            <View style={styles.inputWrapper}>
+              <Mail size={18} color={theme.textMuted} />
+              <TextInput
+                style={styles.input}
+                placeholder="Adresse email"
+                placeholderTextColor={theme.placeholder}
+                value={form.email}
+                onChangeText={v => update("email", v)}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoFocus
+              />
             </View>
-            <Text style={styles.progressText}>Étape {step} sur {STEPS.length}</Text>
-          </View>
+          )}
 
-          {/* Title */}
-          <View style={styles.titleBlock}>
-            <Text style={styles.titleMain}>{STEPS[step - 1].title}</Text>
-            <Text style={styles.titleSub}>{STEPS[step - 1].subtitle}</Text>
-          </View>
+          {step === 2 && (
+            <>
+              <View style={styles.inputWrapper}>
+                <Lock size={18} color={theme.textMuted} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Mot de passe"
+                  placeholderTextColor={theme.placeholder}
+                  secureTextEntry
+                  value={form.password}
+                  onChangeText={v => update("password", v)}
+                  autoFocus
+                />
+              </View>
+              <View style={styles.inputWrapper}>
+                <Lock size={18} color={theme.textMuted} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirmer le mot de passe"
+                  placeholderTextColor={theme.placeholder}
+                  secureTextEntry
+                  value={form.confirm}
+                  onChangeText={v => update("confirm", v)}
+                />
+              </View>
+            </>
+          )}
 
-          {/* Champs par étape */}
-          <View style={styles.form}>
+          {step === 3 && (
+            <>
+              <View style={styles.inputWrapper}>
+                <User size={18} color={theme.textMuted} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Prénom"
+                  placeholderTextColor={theme.placeholder}
+                  value={form.first_name}
+                  onChangeText={v => update("first_name", v)}
+                  autoCapitalize="words"
+                  autoFocus
+                />
+              </View>
+              <View style={styles.inputWrapper}>
+                <User size={18} color={theme.textMuted} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Nom de famille"
+                  placeholderTextColor={theme.placeholder}
+                  value={form.last_name}
+                  onChangeText={v => update("last_name", v)}
+                  autoCapitalize="words"
+                />
+              </View>
+            </>
+          )}
 
-            {step === 1 && (
-                <View style={styles.inputWrapper}>
-                  <Mail size={18} color="#888888" />
-                  <TextInput
-                      style={styles.input}
-                      placeholder="Adresse email"
-                      placeholderTextColor="#555"
-                      value={form.email}
-                      onChangeText={v => update("email", v)}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      autoFocus
-                  />
-                </View>
+          {step === 4 && (
+            <View style={styles.inputWrapper}>
+              <AtSign size={18} color={theme.textMuted} />
+              <TextInput
+                style={styles.input}
+                placeholder="Pseudo (ex: HorizonMoto)"
+                placeholderTextColor={theme.placeholder}
+                value={form.pseudo}
+                onChangeText={v => update("pseudo", v)}
+                autoCapitalize="none"
+                autoFocus
+              />
+            </View>
+          )}
+
+          {step === 5 && (
+            <View style={styles.inputWrapper}>
+              <Phone size={18} color={theme.textMuted} />
+              <TextInput
+                style={styles.input}
+                placeholder="0612345678"
+                placeholderTextColor={theme.placeholder}
+                value={form.phone}
+                onChangeText={v => update("phone", v)}
+                keyboardType="phone-pad"
+                autoFocus
+              />
+            </View>
+          )}
+        </View>
+
+        {/* Boutons */}
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={[styles.button, loading && { opacity: 0.7 }]}
+            onPress={handleNext}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <View style={styles.buttonInner}>
+                <Text style={styles.buttonText}>
+                  {isLastStep ? "Créer mon compte" : "Continuer"}
+                </Text>
+                {!isLastStep && <ChevronRight color="white" size={20} />}
+              </View>
             )}
+          </TouchableOpacity>
 
-            {step === 2 && (
-                <>
-                  <View style={styles.inputWrapper}>
-                    <Lock size={18} color="#888888" />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Mot de passe"
-                        placeholderTextColor="#555"
-                        secureTextEntry
-                        value={form.password}
-                        onChangeText={v => update("password", v)}
-                        autoFocus
-                    />
-                  </View>
-                  <View style={styles.inputWrapper}>
-                    <Lock size={18} color="#888888" />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Confirmer le mot de passe"
-                        placeholderTextColor="#555"
-                        secureTextEntry
-                        value={form.confirm}
-                        onChangeText={v => update("confirm", v)}
-                    />
-                  </View>
-                </>
-            )}
-
-            {step === 3 && (
-                <>
-                  <View style={styles.inputWrapper}>
-                    <User size={18} color="#888888" />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Prénom"
-                        placeholderTextColor="#555"
-                        value={form.first_name}
-                        onChangeText={v => update("first_name", v)}
-                        autoCapitalize="words"
-                        autoFocus
-                    />
-                  </View>
-                  <View style={styles.inputWrapper}>
-                    <User size={18} color="#888888" />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Nom de famille"
-                        placeholderTextColor="#555"
-                        value={form.last_name}
-                        onChangeText={v => update("last_name", v)}
-                        autoCapitalize="words"
-                    />
-                  </View>
-                </>
-            )}
-
-            {step === 4 && (
-                <View style={styles.inputWrapper}>
-                  <AtSign size={18} color="#888888" />
-                  <TextInput
-                      style={styles.input}
-                      placeholder="Pseudo (ex: HorizonMoto)"
-                      placeholderTextColor="#555"
-                      value={form.pseudo}
-                      onChangeText={v => update("pseudo", v)}
-                      autoCapitalize="none"
-                      autoFocus
-                  />
-                </View>
-            )}
-
-            {step === 5 && (
-                <View style={styles.inputWrapper}>
-                  <Phone size={18} color="#888888" />
-                  <TextInput
-                      style={styles.input}
-                      placeholder="0612345678"
-                      placeholderTextColor="#555"
-                      value={form.phone}
-                      onChangeText={v => update("phone", v)}
-                      keyboardType="phone-pad"
-                      autoFocus
-                  />
-                </View>
-            )}
-
-          </View>
-
-          {/* Boutons */}
-          <View style={styles.footer}>
-            <TouchableOpacity
-                style={[styles.button, loading && { opacity: 0.7 }]}
-                onPress={handleNext}
-                disabled={loading}
-            >
-              {loading ? (
-                  <ActivityIndicator color="white" />
-              ) : (
-                  <View style={styles.buttonInner}>
-                    <Text style={styles.buttonText}>
-                      {isLastStep ? "Créer mon compte" : "Continuer"}
-                    </Text>
-                    {!isLastStep && <ChevronRight color="white" size={20} />}
-                  </View>
-              )}
+          {step > 1 && (
+            <TouchableOpacity onPress={() => setStep(s => s - 1)} style={styles.backBtn}>
+              <ChevronLeft color={theme.textMuted} size={16} />
+              <Text style={styles.backText}>Étape précédente</Text>
             </TouchableOpacity>
+          )}
 
-            {step > 1 && (
-                <TouchableOpacity onPress={() => setStep(s => s - 1)} style={styles.backBtn}>
-                  <ChevronLeft color="#888888" size={16} />
-                  <Text style={styles.backText}>Étape précédente</Text>
-                </TouchableOpacity>
-            )}
+          {step === 1 && (
+            <>
+              <View style={styles.separator}>
+                <View style={styles.separatorLine} />
+                <Text style={styles.separatorText}>ou</Text>
+                <View style={styles.separatorLine} />
+              </View>
 
-            {step === 1 && (
-                <>
-                  {/* Séparateur */}
-                  <View style={styles.separator}>
-                    <View style={styles.separatorLine} />
-                    <Text style={styles.separatorText}>ou</Text>
-                    <View style={styles.separatorLine} />
-                  </View>
+              <TouchableOpacity
+                style={[styles.googleBtn, (!request || loading) && { opacity: 0.6 }]}
+                onPress={() => promptAsync()}
+                disabled={!request || loading}
+              >
+                <AntDesign name="google" size={20} color="#EA4335" />
+                <Text style={styles.googleBtnText}>S'inscrire avec Google</Text>
+              </TouchableOpacity>
 
-                  {/* Google */}
-                  <TouchableOpacity
-                      style={[styles.googleBtn, (!request || loading) && { opacity: 0.6 }]}
-                      onPress={() => promptAsync()}
-                      disabled={!request || loading}
-                  >
-                    <AntDesign name="google" size={20} color="#EA4335" />
-                    <Text style={styles.googleBtnText}>S'inscrire avec Google</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-                    <Text style={styles.link}>
-                      Déjà un compte ?{" "}
-                      <Text style={styles.linkAccent}>Se connecter</Text>
-                    </Text>
-                  </TouchableOpacity>
-                </>
-            )}
-          </View>
-
-        </ScrollView>
-      </KeyboardAvoidingView>
+              <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+                <Text style={styles.link}>
+                  Déjà un compte ?{" "}
+                  <Text style={styles.linkAccent}>Se connecter</Text>
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1, backgroundColor: "#111111",
-    justifyContent: "center", alignItems: "center",
-  },
-  keyboardView: {
-    flex: 1, backgroundColor: "#111111",
-  },
-  scrollContent: {
-    flexGrow: 1, justifyContent: "center",
-    paddingHorizontal: 24, paddingVertical: 60, gap: 32,
-  },
+function makeStyles(theme) {
+  return StyleSheet.create({
+    keyboardView: { flex: 1, backgroundColor: theme.bg },
+    scrollContent: {
+      flexGrow: 1, justifyContent: "center",
+      paddingHorizontal: 24, paddingVertical: 60, gap: 32,
+    },
 
-  logoBlock: { alignItems: "center" },
-  logo: { width: 200, height: 55, resizeMode: "contain" },
+    logoBlock: { alignItems: "center" },
+    logo: { width: 200, height: 55, resizeMode: "contain" },
 
-  progressBlock: { gap: 8 },
-  progressBar: {
-    height: 4, backgroundColor: "#2A2A2A",
-    borderRadius: 10, overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%", backgroundColor: PRIMARY, borderRadius: 10,
-  },
-  progressText: {
-    color: "#888888", fontSize: 12,
-    fontFamily: "LexendDeca_400Regular", textAlign: "right",
-  },
+    progressBlock: { gap: 8 },
+    progressBar: { height: 4, backgroundColor: theme.border, borderRadius: 10, overflow: "hidden" },
+    progressFill: { height: "100%", backgroundColor: PRIMARY, borderRadius: 10 },
+    progressText: { color: theme.textMuted, fontSize: 12, fontFamily: "LexendDeca_400Regular", textAlign: "right" },
 
-  titleBlock: { gap: 6 },
-  titleMain: { color: "white", fontSize: 28, fontFamily: "LexendDeca_700Bold" },
-  titleSub:  { color: "#888888", fontSize: 14, fontFamily: "LexendDeca_400Regular" },
+    titleBlock: { gap: 6 },
+    titleMain: { color: theme.text, fontSize: 28, fontFamily: "LexendDeca_700Bold" },
+    titleSub:  { color: theme.textMuted, fontSize: 14, fontFamily: "LexendDeca_400Regular" },
 
-  form: { gap: 14 },
-  inputWrapper: {
-    flexDirection: "row", alignItems: "center",
-    backgroundColor: "#1A1A1A",
-    borderWidth: 1, borderColor: "#2A2A2A",
-    borderRadius: 14, paddingHorizontal: 14, height: 54, gap: 10,
-  },
-  input: {
-    flex: 1, color: "white",
-    fontFamily: "LexendDeca_400Regular", fontSize: 15,
-  },
+    form: { gap: 14 },
+    inputWrapper: {
+      flexDirection: "row", alignItems: "center",
+      backgroundColor: theme.inputBg, borderWidth: 1, borderColor: theme.border,
+      borderRadius: 14, paddingHorizontal: 14, height: 54, gap: 10,
+    },
+    input: { flex: 1, color: theme.text, fontFamily: "LexendDeca_400Regular", fontSize: 15 },
 
-  footer: { gap: 16, alignItems: "center" },
-  button: {
-    backgroundColor: PRIMARY, borderRadius: 14,
-    paddingVertical: 16, width: "100%", alignItems: "center",
-  },
-  buttonInner: { flexDirection: "row", alignItems: "center", gap: 6 },
-  buttonText:  { color: "white", fontSize: 16, fontFamily: "LexendDeca_700Bold" },
+    footer: { gap: 16, alignItems: "center" },
+    button: {
+      backgroundColor: PRIMARY, borderRadius: 14,
+      paddingVertical: 16, width: "100%", alignItems: "center",
+    },
+    buttonInner: { flexDirection: "row", alignItems: "center", gap: 6 },
+    buttonText:  { color: "white", fontSize: 16, fontFamily: "LexendDeca_700Bold" },
 
-  backBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
-  backText: { color: "#888888", fontSize: 14, fontFamily: "LexendDeca_400Regular" },
+    backBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
+    backText: { color: theme.textMuted, fontSize: 14, fontFamily: "LexendDeca_400Regular" },
 
-  link: { color: "#888888", fontSize: 14, fontFamily: "LexendDeca_400Regular", textAlign: "center" },
-  linkAccent: { color: PRIMARY, fontFamily: "LexendDeca_700Bold" },
+    link: { color: theme.textMuted, fontSize: 14, fontFamily: "LexendDeca_400Regular", textAlign: "center" },
+    linkAccent: { color: PRIMARY, fontFamily: "LexendDeca_700Bold" },
 
-  separator: { flexDirection: "row", alignItems: "center", gap: 10, width: "100%" },
-  separatorLine: { flex: 1, height: 1, backgroundColor: "#2A2A2A" },
-  separatorText: { color: "#555", fontFamily: "LexendDeca_400Regular", fontSize: 13 },
+    separator: { flexDirection: "row", alignItems: "center", gap: 10, width: "100%" },
+    separatorLine: { flex: 1, height: 1, backgroundColor: theme.border },
+    separatorText: { color: theme.placeholder, fontFamily: "LexendDeca_400Regular", fontSize: 13 },
 
-  googleBtn: {
-    flexDirection: "row", alignItems: "center", justifyContent: "center",
-    backgroundColor: "#1A1A1A", borderWidth: 1, borderColor: "#2A2A2A",
-    borderRadius: 14, paddingVertical: 14, width: "100%", gap: 10,
-  },
-  googleBtnText: { color: "white", fontSize: 15, fontFamily: "LexendDeca_700Bold" },
-});
+    googleBtn: {
+      flexDirection: "row", alignItems: "center", justifyContent: "center",
+      backgroundColor: theme.inputBg, borderWidth: 1, borderColor: theme.border,
+      borderRadius: 14, paddingVertical: 14, width: "100%", gap: 10,
+    },
+    googleBtnText: { color: theme.text, fontSize: 15, fontFamily: "LexendDeca_700Bold" },
+  });
+}

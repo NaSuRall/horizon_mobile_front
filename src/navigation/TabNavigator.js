@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Home, Calendar, QrCode, ShoppingBag, FileText, Users } from "lucide-react-native";
-import { useTheme, isLightColor } from "../context/ThemeContext";
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
+import { Home, Calendar, QrCode, Gift, User } from "lucide-react-native";
+import { useTheme } from "../context/ThemeContext";
 
 import HomeScreen     from "../screens/HomeScreen";
 import CalendarScreen from "../screens/CalendarScreen";
@@ -12,43 +12,30 @@ import ProfileScreen  from "../screens/ProfilScrenn";
 
 const Tab = createBottomTabNavigator();
 
-const ICONS = {
-    Home:     Home,
-    Calendar: Calendar,
-    QrCode:   QrCode,
-    Shop:     ShoppingBag,
-    Gain:     FileText,
-    Profil:   Users,
-};
-
-const LABELS = {
-    Home:     "Accueil",
-    Calendar: "Agenda",
-    Shop:     "Boutique",
-    Gain:     "Gains",
-    Profil:   "Profil",
-};
+const TABS = [
+    { name: "Home",     Icon: Home,     label: "Accueil" },
+    { name: "Calendar", Icon: Calendar, label: "Agenda"  },
+    // QrCode est géré séparément (bouton central)
+    { name: "Gain",     Icon: Gift,     label: "Gains"   },
+    { name: "Profil",   Icon: User,     label: "Profil"  },
+];
 
 function CustomTabBar({ state, descriptors, navigation }) {
-    const theme   = useTheme();
-    const isLight = isLightColor(theme.primary);
+    const theme = useTheme();
 
-    const iconActive = isLight ? "#111111" : "#ffffff";
-    const iconMuted  = isLight ? "rgba(0,0,0,0.28)" : "rgba(255,255,255,0.32)";
-
-    // Sépare les routes : 2 gauche · 1 centre · 3 droite
-    // Ordre des tabs : Home(0) Calendar(1) QrCode(2) Shop(3) Gain(4) Profil(5)
-    const leftRoutes   = state.routes.filter((_, i) => i < 2);
-    const centerRoute  = state.routes[2];
-    const rightRoutes  = state.routes.filter((_, i) => i > 2);
-    const isCenterFocused = state.index === 2;
+    // Indices dans state.routes (ordre déclaré dans Tab.Navigator)
+    // Home=0 · Calendar=1 · QrCode=2 · Shop=3 · Gain=4 · Profil=5
+    const leftRoutes  = [state.routes[0], state.routes[1]];
+    const centerRoute = state.routes[2];
+    const rightRoutes = [state.routes[4], state.routes[5]];
+    const isCenter    = state.index === 2;
 
     const renderTab = (route) => {
         const idx       = state.routes.findIndex(r => r.key === route.key);
         const isFocused = state.index === idx;
-        const Icon      = ICONS[route.name];
-        const label     = LABELS[route.name];
-        const color     = isFocused ? iconActive : iconMuted;
+        const tab       = TABS.find(t => t.name === route.name);
+        if (!tab) return null;
+        const { Icon, label } = tab;
 
         return (
             <TouchableOpacity
@@ -57,41 +44,59 @@ function CustomTabBar({ state, descriptors, navigation }) {
                 style={styles.tabItem}
                 activeOpacity={0.7}
             >
-                <Icon color={color} size={22} strokeWidth={isFocused ? 2.4 : 1.8} />
-                <Text style={[styles.tabLabel, { color }]}>{label}</Text>
-                {isFocused && (
-                    <View style={[styles.activeDot, { backgroundColor: iconActive }]} />
-                )}
+                <Icon
+                    color={isFocused ? "#ffffff" : "rgba(255,255,255,0.4)"}
+                    size={22}
+                    strokeWidth={isFocused ? 2.5 : 1.8}
+                />
+                <Text style={[
+                    styles.tabLabel,
+                    { color: isFocused ? "#ffffff" : "rgba(255,255,255,0.4)" },
+                    isFocused && styles.tabLabelActive,
+                ]}>
+                    {label}
+                </Text>
+                {isFocused && <View style={styles.activeDot} />}
             </TouchableOpacity>
         );
     };
 
     return (
         <View style={styles.wrapper}>
-            <View style={[styles.container, { backgroundColor: theme.primary }]}>
+            <View style={[styles.bar, { backgroundColor: theme.primary }]}>
 
-                {/* ── Groupe gauche (Home + Calendar) ── */}
+                {/* Groupe gauche — Home · Agenda */}
                 <View style={styles.group}>
                     {leftRoutes.map(renderTab)}
                 </View>
 
-                {/* ── Bouton central QrCode ── */}
+                {/* Bouton QR central surélevé */}
                 <TouchableOpacity
-                    onPress={() => { if (!isCenterFocused) navigation.navigate(centerRoute.name); }}
-                    style={[
-                        styles.centerButton,
-                        isCenterFocused && { borderColor: theme.primary, borderWidth: 3 },
-                    ]}
+                    onPress={() => { if (!isCenter) navigation.navigate(centerRoute.name); }}
                     activeOpacity={0.85}
+                    style={styles.centerWrap}
                 >
-                    <QrCode
-                        color={isCenterFocused ? theme.primary : "#888888"}
-                        size={26}
-                        strokeWidth={2}
-                    />
+                    <View style={[
+                        styles.centerButton,
+                        isCenter && { borderColor: theme.primary, borderWidth: 3, backgroundColor: "#fff" },
+                    ]}>
+                        <QrCode
+                            color={isCenter ? theme.primary : "#fff"}
+                            size={26}
+                            strokeWidth={2}
+                        />
+                    </View>
+                    <Text style={[
+                        styles.tabLabel,
+                        { color: isCenter ? "#ffffff" : "rgba(255,255,255,0.4)" },
+                        isCenter && styles.tabLabelActive,
+                    ]}>
+                        QR Code
+                    </Text>
+                    {isCenter && <View style={styles.activeDot} />}
                 </TouchableOpacity>
 
-                {/* ── Groupe droite (Shop + Gain + Profil) ── */}
+                {/* Groupe droite — Gains · Profil */}
                 <View style={styles.group}>
                     {rightRoutes.map(renderTab)}
                 </View>
@@ -119,26 +124,26 @@ export default function TabNavigator() {
 
 const styles = StyleSheet.create({
     wrapper: {
-        position: "absolute", bottom: 0, left: 0, right: 0,
+        position: "absolute",
+        bottom: 0, left: 0, right: 0,
         alignItems: "center",
-        paddingBottom: 18,
+        paddingBottom: Platform.OS === "ios" ? 24 : 16,
         backgroundColor: "transparent",
     },
-    container: {
-        width: "92%",
-        height: 72,
-        borderRadius: 24,
+
+    bar: {
+        width: "90%",
+        height: 68,
+        borderRadius: 26,
         flexDirection: "row",
         alignItems: "center",
-        // Ombre sous la barre
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
-        elevation: 16,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 16,
+        elevation: 20,
     },
 
-    // Chaque groupe prend la moitié de l'espace → QrCode parfaitement centré
     group: {
         flex: 1,
         flexDirection: "row",
@@ -150,37 +155,45 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
-        paddingVertical: 6,
         gap: 3,
+        paddingVertical: 4,
     },
     tabLabel: {
         fontSize: 10,
-        fontWeight: "500",
         letterSpacing: 0.2,
+    },
+    tabLabelActive: {
+        fontWeight: "700",
     },
     activeDot: {
         width: 4,
         height: 4,
         borderRadius: 2,
+        backgroundColor: "#fff",
         marginTop: 1,
     },
 
-    // Bouton QrCode central — surélevé, fond sombre, cercle blanc
+    // Bouton central QR
+    centerWrap: {
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 3,
+        paddingBottom: 2,
+    },
     centerButton: {
-        width: 62,
-        height: 62,
-        backgroundColor: "#1A1A1A",
-        borderRadius: 31,
-        borderWidth: 2.5,
-        borderColor: "rgba(255,255,255,0.85)",
+        width: 58,
+        height: 58,
+        borderRadius: 29,
+        backgroundColor: "rgba(0,0,0,0.35)",
+        borderWidth: 2,
+        borderColor: "rgba(255,255,255,0.6)",
         justifyContent: "center",
         alignItems: "center",
-        marginTop: -32,
-        // Ombre spécifique au bouton central
+        marginTop: -28,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.35,
+        shadowOpacity: 0.4,
         shadowRadius: 10,
-        elevation: 14,
+        elevation: 16,
     },
 });
