@@ -5,6 +5,7 @@ import {
 } from "react-native";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
+import { makeRedirectUri } from "expo-auth-session";
 import api from "../api/axios";
 import { AuthContext } from "../context/AuthContext";
 import Toast from 'react-native-toast-message';
@@ -34,10 +35,15 @@ export default function RegisterScreen({ navigation }) {
   const [step, setStep]     = useState(1);
   const [loading, setLoading] = useState(false);
 
+  const redirectUri = Platform.OS === "android"
+    ? `com.googleusercontent.apps.589886121106-6ndeismkr8c1t3jgjheuns71i0nfpnop:/oauth2redirect`
+    : makeRedirectUri({ scheme: "com.horizonmoto.app", path: "oauth2redirect/google" });
+
   const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
     webClientId:     GOOGLE_WEB_CLIENT_ID,
-    androidClientId: GOOGLE_ANDROID_CLIENT_ID || undefined,
     scopes: ["profile", "email"],
+    redirectUri,
   });
 
   useEffect(() => {

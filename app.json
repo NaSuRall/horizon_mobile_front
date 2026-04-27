@@ -17,18 +17,36 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.horizonmoto.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#000000"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "com.googleusercontent.apps.589886121106-6ndeismkr8c1t3jgjheuns71i0nfpnop"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-font",
-      "expo-web-browser"
-    ]
+      "expo-web-browser",
+      "expo-dev-client"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b4a8b9d8-fdd6-4e41-b117-eb1f7612925a"
+      }
+    }
   }
 }
