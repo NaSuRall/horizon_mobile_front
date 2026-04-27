@@ -39,16 +39,26 @@ export default function LoginScreen({ navigation }) {
   });
 
   useEffect(() => {
-    if (response?.type === "success") handleGoogleResponse(response.authentication);
+    if (response?.type === "success") {
+      const accessToken = response.authentication?.accessToken ?? response.params?.access_token;
+      if (accessToken) {
+        handleGoogleResponse(accessToken);
+      } else {
+        Toast.show({ type: "error", text1: "Erreur Google", text2: "Token introuvable dans la réponse" });
+      }
+    } else if (response?.type === "error") {
+      Toast.show({ type: "error", text1: "Erreur Google", text2: response.error?.message ?? "Connexion annulée" });
+    }
   }, [response]);
 
-  const handleGoogleResponse = async (authentication) => {
+  const handleGoogleResponse = async (accessToken) => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/auth/google`, {
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+      const res = await fetch(`${apiUrl}/auth/google`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ access_token: authentication.accessToken }),
+        body: JSON.stringify({ access_token: accessToken }),
       });
       const data = await res.json();
       if (res.ok) {
