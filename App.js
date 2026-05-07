@@ -4,6 +4,7 @@ import { AuthProvider, AuthContext } from "./src/context/AuthContext";
 import { ThemeProvider } from "./src/context/ThemeContext";
 import { useContext } from "react";
 import Toast from 'react-native-toast-message';
+import ErrorBoundary from "./src/components/ErrorBoundary";
 
 import LoginScreen from "./src/screens/LoginScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
@@ -39,11 +40,13 @@ function MainWithTheme() {
 
 export default function App() {
     return (
-        <AuthProvider>
-            <NavigationContainer>
-                <AppNavigation />
-                <Toast />
-            </NavigationContainer>
-        </AuthProvider>
+        <ErrorBoundary>
+            <AuthProvider>
+                <NavigationContainer>
+                    <AppNavigation />
+                    <Toast />
+                </NavigationContainer>
+            </AuthProvider>
+        </ErrorBoundary>
     );
 }
